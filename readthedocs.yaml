@@ -7,7 +7,7 @@ build:
 
 python:
   install:
-    - requirements: docs/requirements.txt
+    - requirements: UI-RAG/docs/requirements.txt
 
 mkdocs:
   configuration: UI-RAG/mkdocs.yml
