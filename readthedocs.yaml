@@ -9,6 +9,6 @@ python:
   install:
     - requirements: UI-RAG/docs/requirements.txt
 
-mkdocs:
-  configuration: UI-RAG/mkdocs.yml
+sphinx:
+  configuration: UI-RAG/docs/conf.pyUI-RAG/mkdocs.yml
 
