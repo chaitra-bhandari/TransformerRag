@@ -1,4 +1,5 @@
-
 Sphinx==7.2.6
 sphinx-rtd-theme==2.0.0
 sphinx-autodoc-typehints==1.25.2
+sphinxcontrib-httpdomain==1.8.1
+sphinx-napoleon==0.7.1
