@@ -8,3 +8,7 @@ build:
 python:
   install:
     - requirements: docs/requirements.txt
+
+mkdocs:
+  configuration: UI-RAG/mkdocs.yml
+"@ | Out-File -Encoding UTF8 ".readthedocs.yaml"
