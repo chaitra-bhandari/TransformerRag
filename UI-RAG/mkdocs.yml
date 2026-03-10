@@ -1,0 +1,51 @@
+site_name: Transformer Spec RAG
+site_description: AI-powered document extraction and specification generation using RAG
+site_author: Your Team
+site_url: https://readthedocs.org/
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tabs
+    - navigation.top
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+  palette:
+    scheme: default
+    primary: blue
+    accent: orange
+
+plugins:
+  - search
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.tasklist
+  - pymdownx.details
+  - tables
+  - toc
+  - admonition
+
+nav:
+  - Home: index.md
+  - Quick Start: getting-started.md
+  - Architecture: architecture.md
+  - Setup:
+      - Installation: installation.md
+      - Configuration: configuration.md
+  - Project Structure: project-structure.md
+  - Modules:
+      - Overview: modules/overview.md
+      - Document Extraction: modules/doc-extraction.md
+      - Semantic Chunking: modules/chunking.md
+      - RAG Query Engine: modules/rag-query.md
+      - Document Filling: modules/doc-filling.md
+      - FastAPI Backend: modules/app.md
+      - React Frontend: modules/frontend.md
+  - Usage Guide: usage.md
+  - REST API: api-reference.md
+  - Troubleshooting: troubleshooting.md
+  - FAQ: faq.md
