@@ -10,5 +10,5 @@ python:
     - requirements: UI-RAG/docs/requirements.txt
 
 sphinx:
-  configuration: UI-RAG/docs/conf.pyUI-RAG/mkdocs.yml
+  configuration: UI-RAG/docs/conf.py
 
