@@ -1,6 +1,3 @@
-Y
-Copy
-
 """
 RAG Query Engine - Hybrid Retrieval & Parameter Extraction
 
