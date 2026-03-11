@@ -1,0 +1,18 @@
+/* Hide EthicalAds */
+.ethical-rtd,
+.ethical-sidebar,
+.ethical-ad,
+[data-ea-publisher],
+.ethical-sidebar-image {
+    display: none !important;
+}
+
+/* Hide ad containers */
+aside.ethical-rtd {
+    display: none !important;
+}
+
+/* Remove extra space left behind */
+div.rst-content {
+    margin-right: 0 !important;
+}
