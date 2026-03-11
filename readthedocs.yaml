@@ -8,6 +8,7 @@ build:
 python:
   install:
     - requirements: UI-RAG/requirements.txt
+    - path: .
 
 sphinx:
   configuration: UI-RAG/docs/conf.py
