@@ -27,12 +27,9 @@ The system consists of three main layers:
             ▼                  ▼                  ▼
     ┌──────────────────┐ ┌───────────────────┐ ┌────────────────┐
     │ Azure Services   │ │ Vector Database   │ │ Storage Layer  │
-<<<<<<< HEAD
-    │ - DI (Extract)   │ │                 │ │ - Blob Storage │
-=======
+    │ - DI (Extract)   │ │  - FAISS (Local)  │ │ - Blob Storage │
     │ - DI (Extract)   │ │                   │ │ - Blob Storage │
->>>>>>> 476f0ab525419fb63b99b6ae6da186bc3d18eac5
-    │ - OpenAI (RAG)   │ │ - FAISS (Local)   │ │ - Containers   │
+    │ - OpenAI (RAG)   │ │                   │ │ - Containers   │
     └──────────────────┘ └───────────────────┘ └────────────────┘
 
 Core Processing Pipeline
