@@ -13,7 +13,3 @@ sphinx:
   configuration: UI-RAG/docs/conf.py
 
 
-# Disable ads
-build:
-  apt_packages:
-    - build-essential
