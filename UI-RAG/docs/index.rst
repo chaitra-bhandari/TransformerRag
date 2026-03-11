@@ -23,16 +23,6 @@ This documentation provides complete information about the system architecture, 
 
 .. toctree::
    :maxdepth: 2
-   :caption: Core Modules
-
-   modules/document-extraction
-   modules/semantic-chunking
-   modules/rag-query-engine
-   modules/document-filling
-   modules/fastapi-backend
-
-.. toctree::
-   :maxdepth: 2
    :caption: API Reference
 
    app
