@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>doc_filling_blob module &mdash; Transformer Spec RAG 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=8d563738"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="rag_query module" href="rag_query.html" />
+    <link rel="prev" title="doc_extraction_using_di module" href="doc_extraction_using_di.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Transformer Spec RAG
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Architecture &amp; Design</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">UI-RAG</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="app.html">app module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="chunk_by_title_semantic_blob.html">chunk_by_title_semantic_blob module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="doc_extraction_using_di.html">doc_extraction_using_di module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">doc_filling_blob module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#doc_filling_blob.DocxFiller"><code class="docutils literal notranslate"><span class="pre">DocxFiller</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.__init__"><code class="docutils literal notranslate"><span class="pre">DocxFiller.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.normalize"><code class="docutils literal notranslate"><span class="pre">DocxFiller.normalize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.find_json_key"><code class="docutils literal notranslate"><span class="pre">DocxFiller.find_json_key()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.strip_metadata"><code class="docutils literal notranslate"><span class="pre">DocxFiller.strip_metadata()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.get_value"><code class="docutils literal notranslate"><span class="pre">DocxFiller.get_value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.is_heading"><code class="docutils literal notranslate"><span class="pre">DocxFiller.is_heading()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.remove_content_after_heading"><code class="docutils literal notranslate"><span class="pre">DocxFiller.remove_content_after_heading()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.make_table"><code class="docutils literal notranslate"><span class="pre">DocxFiller.make_table()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.make_cooling_table"><code class="docutils literal notranslate"><span class="pre">DocxFiller.make_cooling_table()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.process"><code class="docutils literal notranslate"><span class="pre">DocxFiller.process()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.download_template"><code class="docutils literal notranslate"><span class="pre">DocxFiller.download_template()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.upload_output"><code class="docutils literal notranslate"><span class="pre">DocxFiller.upload_output()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.run"><code class="docutils literal notranslate"><span class="pre">DocxFiller.run()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rag_query.html">rag_query module</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Support</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Transformer Spec RAG</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">UI-RAG</a></li>
+      <li class="breadcrumb-item active">doc_filling_blob module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/doc_filling_blob.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-doc_filling_blob">
+<span id="doc-filling-blob-module"></span><h1>doc_filling_blob module<a class="headerlink" href="#module-doc_filling_blob" title="Link to this heading"></a></h1>
+<p>Transformer Document Processor:
+- Reads files from:   input-document-center/{project_folder}/
+- Writes results to:  output-of-di/{project_folder}/
+- Skips project if output already exists in output-of-di</p>
+<dl class="simple">
+<dt>Project folder name comes from the UI:</dt><dd><p>standalone → ProjectName_onshore/   or  ProjectName_offshore/
+combined   → ProjectName_onshore_offshore/</p>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="doc_filling_blob.DocxFiller">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">doc_filling_blob.</span></span><span class="sig-name descname"><span class="pre">DocxFiller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'A'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_filling_blob.html#DocxFiller"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_filling_blob.DocxFiller" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Fills Word templates with JSON data (Azure Blob version).
+Includes blocking logic for specific sections.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>json_data</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a>) – </p></li>
+<li><p><strong>order_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_filling_blob.DocxFiller.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'A'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_filling_blob.html#DocxFiller.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_filling_blob.DocxFiller.__init__" title="Link to this definition"></a></dt>
+<dd><p>Initialize with JSON data from rag_query.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>json_data</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a>) – Dict with extracted parameters</p></li>
+<li><p><strong>order_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – ‘A’ or ‘B’</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_filling_blob.DocxFiller.normalize">
+<span class="sig-name descname"><span class="pre">normalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_filling_blob.html#DocxFiller.normalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_filling_blob.DocxFiller.normalize" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_filling_blob.DocxFiller.find_json_key">
+<span class="sig-name descname"><span class="pre">find_json_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">heading</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_filling_blob.html#DocxFiller.find_json_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_filling_blob.DocxFiller.find_json_key" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_filling_blob.DocxFiller.strip_metadata">
+<span class="sig-name descname"><span class="pre">strip_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_filling_blob.html#DocxFiller.strip_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_filling_blob.DocxFiller.strip_metadata" title="Link to this definition"></a></dt>
+<dd><p>Recursively strip metadata fields from any dict at any nesting level.
+Unit is appended to every leaf value (scalar, dict values, list items).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_filling_blob.DocxFiller.get_value">
+<span class="sig-name descname"><span class="pre">get_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_filling_blob.html#DocxFiller.get_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_filling_blob.DocxFiller.get_value" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_filling_blob.DocxFiller.is_heading">
+<span class="sig-name descname"><span class="pre">is_heading</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">para</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_filling_blob.html#DocxFiller.is_heading"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_filling_blob.DocxFiller.is_heading" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_filling_blob.DocxFiller.remove_content_after_heading">
+<span class="sig-name descname"><span class="pre">remove_content_after_heading</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heading_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_filling_blob.html#DocxFiller.remove_content_after_heading"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_filling_blob.DocxFiller.remove_content_after_heading" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_filling_blob.DocxFiller.make_table">
+<span class="sig-name descname"><span class="pre">make_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_filling_blob.html#DocxFiller.make_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_filling_blob.DocxFiller.make_table" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_filling_blob.DocxFiller.make_cooling_table">
+<span class="sig-name descname"><span class="pre">make_cooling_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cooling_types</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_filling_blob.html#DocxFiller.make_cooling_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_filling_blob.DocxFiller.make_cooling_table" title="Link to this definition"></a></dt>
+<dd><p>Build a table: cooling types + rated power per cooling type.
+Unit is already embedded in values by strip_metadata, so no unit in headers.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_filling_blob.DocxFiller.process">
+<span class="sig-name descname"><span class="pre">process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">doc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_filling_blob.html#DocxFiller.process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_filling_blob.DocxFiller.process" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_filling_blob.DocxFiller.download_template">
+<span class="sig-name descname"><span class="pre">download_template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temp_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_filling_blob.html#DocxFiller.download_template"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_filling_blob.DocxFiller.download_template" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>temp_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_filling_blob.DocxFiller.upload_output">
+<span class="sig-name descname"><span class="pre">upload_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_filling_blob.html#DocxFiller.upload_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_filling_blob.DocxFiller.upload_output" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>local_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – </p></li>
+<li><p><strong>project_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_filling_blob.DocxFiller.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_filling_blob.html#DocxFiller.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_filling_blob.DocxFiller.run" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>project_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="doc_extraction_using_di.html" class="btn btn-neutral float-left" title="doc_extraction_using_di module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rag_query.html" class="btn btn-neutral float-right" title="rag_query module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Your Team.
+      <span class="lastupdated">Last updated on Mar 11, 2026.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

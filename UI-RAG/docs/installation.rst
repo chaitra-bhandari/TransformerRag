@@ -51,13 +51,6 @@ Creating a virtual environment isolates your project dependencies.
     python -m venv venv
     venv\Scripts\activate
 
-**On macOS/Linux:**
-
-.. code-block:: bash
-
-    python3 -m venv venv
-    source venv/bin/activate
-
 You'll see ``(venv)`` prefix in your terminal prompt when activated.
 
 Step 3: Install Dependencies
@@ -207,16 +200,6 @@ In a new terminal:
 
 The React app will open at ``http://localhost:3000``
 
-Docker Installation (Optional)
-==============================
-
-For containerized deployment:
-
-.. code-block:: bash
-
-    docker build -t transformer-rag:latest .
-    docker run -p 8000:8000 --env-file .env transformer-rag:latest
-
 Troubleshooting Installation
 ============================
 
@@ -225,9 +208,6 @@ Troubleshooting Installation
 Solution: Install Python from `python.org <https://python.org>`__ or use a package manager:
 
 .. code-block:: bash
-
-    # macOS with Homebrew
-    brew install python3
 
     # Windows with Chocolatey
     choco install python

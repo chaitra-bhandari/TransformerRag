@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Architecture &mdash; Transformer Spec RAG 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=8d563738"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="UI-RAG" href="modules.html" />
+    <link rel="prev" title="Quick Start" href="quickstart.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Transformer Spec RAG
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Architecture &amp; Design</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Architecture</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#system-overview">System Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#core-processing-pipeline">Core Processing Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#data-flow-diagram">Data Flow Diagram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#database-storage-architecture">Database &amp; Storage Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#api-layer-architecture">API Layer Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#frontend-architecture">Frontend Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scalability-considerations">Scalability Considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#security-architecture">Security Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-dependencies">Module Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deployment-architecture">Deployment Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#next-steps">Next Steps</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">UI-RAG</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Support</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Transformer Spec RAG</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Architecture</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/architecture.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="architecture">
+<h1>Architecture<a class="headerlink" href="#architecture" title="Link to this heading"></a></h1>
+<p>Transformer Spec RAG is built on a modular, cloud-native architecture designed for scalability and maintainability.</p>
+<section id="system-overview">
+<h2>System Overview<a class="headerlink" href="#system-overview" title="Link to this heading"></a></h2>
+<p>The system consists of three main layers:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>┌─────────────────────────────────────────────────────────────┐
+│                        Frontend Layer                        │
+│              React Web UI + Chat Interface                  │
+│        (Docflow_chatui.jsx + Index.HTML)                    │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ HTTP/WebSocket
+┌──────────────────────────▼──────────────────────────────────┐
+│                      Backend Layer                          │
+│                    FastAPI Application                      │
+│  (Document Processing, RAG, API Endpoints)                  │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+        ┌──────────────────┼──────────────────┐
+        ▼                  ▼                  ▼
+┌──────────────────┐ ┌───────────────────┐ ┌────────────────┐
+│ Azure Services   │ │ Vector Database   │ │ Storage Layer  │
+│ - DI (Extract)   │ │ - AI Search       │ │ - Blob Storage │
+│ - OpenAI (RAG)   │ │ - FAISS (Local)   │ │ - Containers   │
+└──────────────────┘ └───────────────────┘ └────────────────┘
+</pre></div>
+</div>
+</section>
+<section id="core-processing-pipeline">
+<h2>Core Processing Pipeline<a class="headerlink" href="#core-processing-pipeline" title="Link to this heading"></a></h2>
+<p><strong>1. Document Ingestion</strong></p>
+<p>When a user uploads documents:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Upload File (PDF/DOCX/XLSX)
+         ↓
+FastAPI Endpoint validates
+         ↓
+Save to temporary storage
+         ↓
+Upload to Azure Blob Storage
+</pre></div>
+</div>
+<p><strong>File Validation:</strong>
+- Extension check (.pdf, .docx, .xlsx)
+- Size validation (max 100 MB)
+- Content type verification
+- Duplicate detection (MD5 hash)</p>
+<p><strong>2. Document Extraction</strong> (<code class="docutils literal notranslate"><span class="pre">doc_extraction_using_di.py</span></code>)</p>
+<p>Azure Document Intelligence extracts structure:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Raw Document
+     ↓
+Azure Document Intelligence (Prebuilt Layout)
+     ↓
+Structural Analysis:
+- Page detection
+- Paragraph extraction
+- Table identification
+- Role classification (heading, text, etc.)
+     ↓
+DI Result JSON
+     ↓
+Saved to output-of-di container
+</pre></div>
+</div>
+<p><strong>Key Outputs:</strong>
+- <code class="docutils literal notranslate"><span class="pre">pages</span></code>: Page metadata and numbering
+- <code class="docutils literal notranslate"><span class="pre">paragraphs</span></code>: Text content with roles and positions
+- <code class="docutils literal notranslate"><span class="pre">tables</span></code>: Structured table data with cells
+- <code class="docutils literal notranslate"><span class="pre">bounding_regions</span></code>: Spatial coordinates</p>
+<p><strong>Image Page Detection:</strong></p>
+<p>For PDFs, system detects image-heavy pages:
+- Convert PDF to images
+- Calculate pixel variance
+- Flag low-text pages for manual review
+- Extract minimal text from images</p>
+<p><strong>3. Semantic Chunking</strong> (<code class="docutils literal notranslate"><span class="pre">chunk_by_title_semantic_blob.py</span></code>)</p>
+<p>Intelligently splits documents while preserving structure:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DI Output
+     ↓
+Noise Removal:
+- Strip headers/footers
+- Remove page numbers
+- Filter document metadata
+     ↓
+Structure Analysis:
+- Identify section headings (numbered and by role)
+- Build hierarchical context
+- Track heading levels (1-4)
+     ↓
+Smart Chunking:
+- Group text under headings
+- Respect max size (4000 chars)
+- Create new chunk after 3800 chars
+- Merge small chunks (&lt; 2000 chars)
+     ↓
+Chunk Objects:
+{
+  &quot;chunk_id&quot;: &quot;doc_p3_t123&quot;,
+  &quot;content&quot;: &quot;Section heading: paragraph text...&quot;,
+  &quot;metadata&quot;: {
+    &quot;source_document&quot;: &quot;specification.pdf&quot;,
+    &quot;project_name&quot;: &quot;Transformer_A&quot;,
+    &quot;page&quot;: 3
+  }
+}
+</pre></div>
+</div>
+<p><strong>Chunking Strategy:</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Section 1: Transformer Basics (500 chars)
+├─ Chunk 1: &quot;Transformer Basics: These devices... ratings...&quot;
+│
+Section 2: Technical Specifications (3500 chars)
+├─ Chunk 2: &quot;Technical Specifications: Voltage... capacity...&quot;
+├─ Chunk 3: &quot;...thermal limits... efficiency measurements...&quot;
+│
+Section 3: Operating Parameters (1500 chars)
+└─ Chunk 3: &quot;Operating Parameters: (merged with previous)...&quot;
+</pre></div>
+</div>
+<p><strong>Noise Patterns Removed:</strong>
+- Page numbers: “1/7”, “page 5 of 12”
+- Document IDs: “22/10231-12”
+- Revision markers: “Revision 2.1”
+- Company headers: “ENERGINET”
+- Footer text: “taking power further”</p>
+<p><strong>4. Vector Embedding &amp; FAISS Indexing</strong> (rag_query.py)</p>
+<p>Converts chunks to semantic vectors and stores in FAISS:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Chunks (text)
+     ↓
+OpenAI Embeddings API
+(text-embedding-3-large, 3072 dimensions)
+     ↓
+Vector representations
+(numerical vectors capturing semantic meaning)
+     ↓
+FAISS Index Creation
+(Fast Approximate Nearest Neighbor Search)
+     ↓
+Stored in Azure Blob Storage
+     ↓
+Ready for semantic search queries
+</pre></div>
+</div>
+<p><strong>Embedding Process:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">chunk_text</span> <span class="o">=</span> <span class="s2">&quot;Technical Specifications: Voltage 400 kV, capacity 100 MVA...&quot;</span>
+
+<span class="c1"># Convert to vector (3072 dimensions)</span>
+<span class="n">vector</span> <span class="o">=</span> <span class="n">openai_embeddings</span><span class="o">.</span><span class="n">embed_query</span><span class="p">(</span><span class="n">chunk_text</span><span class="p">)</span>
+
+<span class="c1"># Store in index</span>
+<span class="n">search_index</span><span class="o">.</span><span class="n">upload_documents</span><span class="p">([{</span>
+    <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="s1">&#39;chunk_123&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="n">chunk_text</span><span class="p">,</span>
+    <span class="s1">&#39;content_vector&#39;</span><span class="p">:</span> <span class="n">vector</span><span class="p">,</span>
+    <span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">}</span>
+<span class="p">}])</span>
+</pre></div>
+</div>
+<p><strong>5. FAISS Indexing</strong></p>
+<p>Stores vectors in FAISS for fast retrieval:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Chunks + Vectors
+     ↓
+FAISS Index Creation
+- Create index for fast search
+- Use approximate nearest neighbors
+- Store in Azure Blob Storage
+- Backup metadata separately
+     ↓
+Ready for queries
+</pre></div>
+</div>
+<p><strong>6. Query Processing</strong> (<code class="docutils literal notranslate"><span class="pre">rag_query.py</span></code> - Core Module)</p>
+<p>When user asks a question:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>User Question: &quot;What is the transformer voltage?&quot;
+     ↓
+Convert to embedding (same model as chunks)
+     ↓
+Search FAISS Index:
+- Fast approximate nearest neighbor search
+- Retrieve top-K results (default: 20)
+- BM25 hybrid search for keyword matching
+- CrossEncoder reranking for relevance
+     ↓
+Retrieved Chunks:
+[
+  {chunk1: &quot;...rated voltage 400 kV...&quot;},
+  {chunk2: &quot;...operating voltage range...&quot;},
+  {chunk3: &quot;...voltage regulation...&quot;}
+]
+     ↓
+Pass to RAG model
+</pre></div>
+</div>
+<p><strong>7. RAG Generation</strong></p>
+<p>Uses OpenAI GPT-4 to synthesize answer:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Retrieved Chunks (Context)
+     ↓
+Construct Prompt:
+System: &quot;You are a transformer specification expert...&quot;
+Context: &quot;[Retrieved chunk 1]\n[Retrieved chunk 2]...&quot;
+Question: &quot;What is the transformer voltage?&quot;
+     ↓
+OpenAI GPT-4 Processing
+     ↓
+Generated Response:
+&quot;Based on the specifications, the transformer is rated
+ for 400 kV nominal voltage with operating range of
+ 380-420 kV as per document section 2.3...&quot;
+     ↓
+Return to user
+</pre></div>
+</div>
+<p><strong>Temperature &amp; Sampling:</strong>
+- Low temperature (0.3) for factual extraction
+- Higher temperature (0.7) for synthesis tasks
+- Top-p sampling for diversity control</p>
+<p><strong>8. Document Generation</strong> (<code class="docutils literal notranslate"><span class="pre">doc_filling_blob.py</span></code>)</p>
+<p>Creates output .docx files:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Generated Specifications + Templates
+     ↓
+Parameter Extraction:
+- Parse specifications
+- Extract key values
+- Map to template fields
+     ↓
+Template Filling:
+- Load Order_A.docx or Order_B.docx template
+- Replace placeholders with extracted values
+- Maintain formatting
+     ↓
+Document Generation:
+- Create output document
+- Validate content
+- Upload to blob storage
+     ↓
+User Download:
+order-design-documents/Order_A_filled.docx
+</pre></div>
+</div>
+<p><strong>Template Processing:</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Template: &quot;{{TRANSFORMER_NAME}}: {{RATED_VOLTAGE}} kV&quot;
+Parameters: {
+  &quot;TRANSFORMER_NAME&quot;: &quot;Unit-01&quot;,
+  &quot;RATED_VOLTAGE&quot;: &quot;400&quot;
+}
+Output: &quot;Unit-01: 400 kV&quot;
+</pre></div>
+</div>
+</section>
+<section id="data-flow-diagram">
+<h2>Data Flow Diagram<a class="headerlink" href="#data-flow-diagram" title="Link to this heading"></a></h2>
+<p>Complete data journey through the system:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>┌──────────────────┐
+│  User Upload     │
+│   PDF/DOCX       │
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────────────┐
+│  FastAPI Upload Handler  │
+│  - Validate file         │
+│  - Check duplicates      │
+│  - Save to temp          │
+└────────┬─────────────────┘
+         │
+         ▼
+┌──────────────────────────┐
+│  Upload to Blob Storage  │
+│  (input container)       │
+└────────┬─────────────────┘
+         │
+         ▼
+┌──────────────────────────┐
+│  Document Intelligence   │
+│  Extraction Process      │
+│  - Layout analysis       │
+│  - Content extraction    │
+│  - Table detection       │
+└────────┬─────────────────┘
+         │
+         ▼
+┌──────────────────────────┐
+│  Save DI Results JSON    │
+│  (output-of-di)          │
+└────────┬─────────────────┘
+         │
+         ▼
+┌──────────────────────────┐
+│  Semantic Chunking       │
+│  - Remove noise          │
+│  - Identify sections     │
+│  - Create chunks         │
+└────────┬─────────────────┘
+         │
+         ▼
+┌──────────────────────────┐
+│  Generate Embeddings     │
+│  (OpenAI Embeddings API) │
+└────────┬─────────────────┘
+         │
+         ▼
+┌──────────────────────────┐
+│  Index in Azure AI Search│
+│  - Store vectors         │
+│  - Index metadata        │
+└────────┬─────────────────┘
+         │
+         ▼ (Ready for queries)
+
+┌──────────────────────────┐
+│  User Question           │
+│  (Chat Interface)        │
+└────────┬─────────────────┘
+         │
+         ▼
+┌──────────────────────────┐
+│  Embed Query             │
+│  (Same embedding model)  │
+└────────┬─────────────────┘
+         │
+         ▼
+┌──────────────────────────┐
+│  Semantic Search         │
+│  (AI Search Index)       │
+│  - Top-K retrieval       │
+│  - Metadata filtering    │
+└────────┬─────────────────┘
+         │
+         ▼
+┌──────────────────────────┐
+│  RAG Processing          │
+│  (GPT-4)                 │
+│  - Build context         │
+│  - Generate response     │
+└────────┬─────────────────┘
+         │
+         ▼
+┌──────────────────────────┐
+│  Document Generation     │
+│  (Template filling)      │
+└────────┬─────────────────┘
+         │
+         ▼
+┌──────────────────────────┐
+│  Save to Blob Storage    │
+│  (order-design-docs)     │
+└────────┬─────────────────┘
+         │
+         ▼
+┌──────────────────────────┐
+│  User Download           │
+│  Final .docx Document    │
+└──────────────────────────┘
+</pre></div>
+</div>
+</section>
+<section id="database-storage-architecture">
+<h2>Database &amp; Storage Architecture<a class="headerlink" href="#database-storage-architecture" title="Link to this heading"></a></h2>
+<p><strong>Azure Blob Storage Containers</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>storage-account/
+├── transformer-input/              # Raw uploads
+│   ├── ProjectA_onshore/
+│   │   ├── spec1.pdf
+│   │   ├── spec2.docx
+│   │   └── data.xlsx
+│   └── ProjectB_offshore/
+│       └── spec.pdf
+│
+├── output-of-di/                   # DI extraction results
+│   ├── ProjectA_onshore/
+│   │   ├── spec1_di_result.json
+│   │   └── spec2_di_result.json
+│   └── ProjectB_offshore/
+│       └── spec_di_result.json
+│
+├── chunked-output/                 # Chunked documents
+│   └── all_chunks.json             # All chunks + metadata
+│
+├── order-design-documents/         # Generated documents
+│   ├── ProjectA_onshore/
+│   │   ├── Order_A_unit1.docx
+│   │   └── Order_B_unit1.docx
+│   └── ProjectB_offshore/
+│       └── Order_A_unit1.docx
+│
+├── order-templates/                # Document templates
+│   ├── Order_A.docx
+│   └── Order_B.docx
+│
+└── chunked-output/
+    └── all_chunks.json
+</pre></div>
+</div>
+<p><strong>FAISS Index Storage Structure</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>storage-account/
+├── faiss-indexes/                  ← FAISS vector indexes
+│   ├── ProjectA_onshore.index
+│   ├── ProjectA_offshore.index
+│   ├── ProjectB_onshore.index
+│   └── ProjectB_offshore.index
+│
+└── faiss-metadata/                 ← Chunk metadata for lookup
+    ├── ProjectA_onshore_metadata.json
+    ├── ProjectA_offshore_metadata.json
+    ├── ProjectB_onshore_metadata.json
+    └── ProjectB_offshore_metadata.json
+</pre></div>
+</div>
+<p><strong>FAISS Index Format</strong></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;embeddings&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">[</span><span class="mf">0.123</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.456</span><span class="p">,</span><span class="w"> </span><span class="mf">0.789</span><span class="p">,</span><span class="w"> </span><span class="err">...</span><span class="p">],</span><span class="w">  </span><span class="c1">// 3072-dim vectors</span>
+<span class="w">    </span><span class="p">[</span><span class="mf">0.234</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.567</span><span class="p">,</span><span class="w"> </span><span class="mf">0.890</span><span class="p">,</span><span class="w"> </span><span class="err">...</span><span class="p">],</span>
+<span class="w">    </span><span class="err">...</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;metadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">&quot;chunk_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;spec_p1_t123&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;content&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Specification text...&quot;</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;page&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">&quot;source_document&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;spec.pdf&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="err">...</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="api-layer-architecture">
+<h2>API Layer Architecture<a class="headerlink" href="#api-layer-architecture" title="Link to this heading"></a></h2>
+<p><strong>FastAPI Endpoints</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>/upload                 → POST  (File upload &amp; trigger DI)
+/query                  → POST  (RAG query)
+/generate-document      → POST  (Fill templates)
+/list-projects          → GET   (Project listing)
+/project-status         → GET   (Processing status)
+/download/{doc_id}      → GET   (Download document)
+/health                 → GET   (Health check)
+</pre></div>
+</div>
+<p><strong>Authentication &amp; Security</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Headers:
+├── X-API-Key: {API_KEY}  # API key validation
+│
+CORS Middleware
+├── Allowed origins (configurable)
+├── Allowed methods (GET, POST, PUT, DELETE)
+└── Credential handling
+</pre></div>
+</div>
+<p><strong>Error Handling</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Exception → HTTP Status
+├── ValidationError → 400 Bad Request
+├── Unauthorized → 401 Unauthorized
+├── Forbidden → 403 Forbidden
+├── NotFound → 404 Not Found
+├── Duplicate → 409 Conflict
+└── ServerError → 500 Internal Server Error
+</pre></div>
+</div>
+</section>
+<section id="frontend-architecture">
+<h2>Frontend Architecture<a class="headerlink" href="#frontend-architecture" title="Link to this heading"></a></h2>
+<p><strong>React Application Structure</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>/frontend
+├── src/
+│   ├── components/
+│   │   ├── Docflow_chatui.jsx      # Chat interface
+│   │   ├── UploadPanel.jsx         # File upload
+│   │   └── ResultsPanel.jsx        # Display results
+│   │
+│   ├── hooks/
+│   │   ├── useApi.js               # API calls
+│   │   └── useChat.js              # Chat state
+│   │
+│   ├── services/
+│   │   └── api.js                  # API client
+│   │
+│   └── App.jsx                     # Main component
+│
+└── Index.HTML                      # HTML entry point
+</pre></div>
+</div>
+<p><strong>Component Communication</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>User Input (React)
+       ↓
+useApi Hook (HTTP)
+       ↓
+FastAPI Backend
+       ↓
+Process (DI, Chunking, RAG)
+       ↓
+FastAPI Response (JSON)
+       ↓
+Update React State
+       ↓
+Render Results (JSX)
+       ↓
+Display to User
+</pre></div>
+</div>
+</section>
+<section id="scalability-considerations">
+<h2>Scalability Considerations<a class="headerlink" href="#scalability-considerations" title="Link to this heading"></a></h2>
+<p><strong>Vertical Scaling</strong>
+- Increase Azure resource SKUs
+- Add more API replicas
+- Larger AI Search indexes</p>
+<p><strong>Horizontal Scaling</strong>
+- Multiple FastAPI instances behind load balancer
+- Distributed task queue (Celery) for DI processing
+- Caching layer (Redis) for embeddings</p>
+<p><strong>Performance Optimizations</strong>
+- Batch embedding processing
+- Chunk size optimization
+- Index query caching
+- Async/await for I/O operations</p>
+</section>
+<section id="security-architecture">
+<h2>Security Architecture<a class="headerlink" href="#security-architecture" title="Link to this heading"></a></h2>
+<p><strong>Layer-Based Security</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Network Layer
+├── HTTPS/TLS encryption
+├── CORS policy enforcement
+└── Rate limiting
+
+Application Layer
+├── API key validation
+├── Input validation
+├── SQL injection prevention
+└── XSS protection
+
+Data Layer
+├── Azure Storage encryption
+├── Azure AI Search security
+├── Credential management
+└── Access control
+</pre></div>
+</div>
+<p><strong>Secrets Management</strong>
+- Use Azure Key Vault (production)
+- .env files (development only)
+- Never commit secrets
+- Rotate credentials regularly</p>
+</section>
+<section id="module-dependencies">
+<h2>Module Dependencies<a class="headerlink" href="#module-dependencies" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>app.py (main)
+├── doc_extraction_using_di.py
+│   ├── azure.ai.formrecognizer
+│   ├── pdf2image
+│   └── PyPDF2
+│
+├── chunk_by_title_semantic_blob.py
+│   └── tiktoken
+│
+├── rag_query.py
+│   └── openai
+│
+└── doc_filling_blob.py
+    └── python-docx
+</pre></div>
+</div>
+</section>
+<section id="deployment-architecture">
+<h2>Deployment Architecture<a class="headerlink" href="#deployment-architecture" title="Link to this heading"></a></h2>
+<p><strong>Development</strong>
+- Local FastAPI server
+- Local Blob emulator (optional)
+- Cloud AI services</p>
+<p><strong>Staging</strong>
+- Docker container on Azure Container Instances
+- Azure services (full scale)
+- Staging data containers</p>
+<p><strong>Production</strong>
+- Azure App Service or Container Instances
+- Load balancer
+- Auto-scaling based on queue depth
+- Backup and disaster recovery
+- Monitoring and alerting</p>
+<p>See <span class="xref std std-doc">deployment</span> for detailed setup instructions.</p>
+</section>
+<section id="next-steps">
+<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Read <span class="xref std std-doc">pipeline_flow</span> for detailed workflow</p></li>
+<li><p>Explore <span class="xref std std-doc">modules/index</span> for module details</p></li>
+<li><p>Check <span class="xref std std-doc">api/endpoints</span> for API reference</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="quickstart.html" class="btn btn-neutral float-left" title="Quick Start" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="modules.html" class="btn btn-neutral float-right" title="UI-RAG" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Your Team.
+      <span class="lastupdated">Last updated on Mar 11, 2026.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

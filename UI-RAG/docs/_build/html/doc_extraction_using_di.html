@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>doc_extraction_using_di module &mdash; Transformer Spec RAG 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=8d563738"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="doc_filling_blob module" href="doc_filling_blob.html" />
+    <link rel="prev" title="chunk_by_title_semantic_blob module" href="chunk_by_title_semantic_blob.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Transformer Spec RAG
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Architecture &amp; Design</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">UI-RAG</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="app.html">app module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="chunk_by_title_semantic_blob.html">chunk_by_title_semantic_blob module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">doc_extraction_using_di module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.__init__"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.project_already_processed"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.project_already_processed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.list_project_files"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.list_project_files()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.download_to_temp"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.download_to_temp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.upload_result_to_blob"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.upload_result_to_blob()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.calculate_hash"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.calculate_hash()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.is_duplicate"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.is_duplicate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.detect_image_pages"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.detect_image_pages()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.process_with_di"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.process_with_di()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.process_single_file"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.process_single_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.process_project"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.process_project()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="doc_filling_blob.html">doc_filling_blob module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rag_query.html">rag_query module</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Support</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Transformer Spec RAG</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">UI-RAG</a></li>
+      <li class="breadcrumb-item active">doc_extraction_using_di module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/doc_extraction_using_di.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-doc_extraction_using_di">
+<span id="doc-extraction-using-di-module"></span><h1>doc_extraction_using_di module<a class="headerlink" href="#module-doc_extraction_using_di" title="Link to this heading"></a></h1>
+<p>Transformer Document Processor:
+- Reads files from:   input-document-center/{project_folder}/
+- Writes results to:  output-of-di/{project_folder}/
+- Skips project if output already exists in output-of-di</p>
+<dl class="simple">
+<dt>Project folder name comes from the UI:</dt><dd><p>standalone → ProjectName_onshore/   or  ProjectName_offshore/
+combined   → ProjectName_onshore_offshore/</p>
+</dd>
+</dl>
+<dl class="py class">
+<dt class="sig sig-object py" id="doc_extraction_using_di.TransformerDocumentProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">doc_extraction_using_di.</span></span><span class="sig-name descname"><span class="pre">TransformerDocumentProcessor</span></span><a class="reference internal" href="_modules/doc_extraction_using_di.html#TransformerDocumentProcessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_extraction_using_di.TransformerDocumentProcessor" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Process all files from a project folder in Azure Blob Storage.</p>
+<dl>
+<dt>Flow:</dt><dd><dl class="simple">
+<dt>input-document-center/ProjectName_onshore_offshore/file.pdf</dt><dd><p>↓  download to temp
+↓  run Azure DI
+↓  upload result JSON</p>
+</dd>
+</dl>
+<p>output-of-di/ProjectName_onshore_offshore/file_di_result.json</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_extraction_using_di.TransformerDocumentProcessor.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_extraction_using_di.html#TransformerDocumentProcessor.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_extraction_using_di.TransformerDocumentProcessor.__init__" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_extraction_using_di.TransformerDocumentProcessor.project_already_processed">
+<span class="sig-name descname"><span class="pre">project_already_processed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_folder</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_extraction_using_di.html#TransformerDocumentProcessor.project_already_processed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_extraction_using_di.TransformerDocumentProcessor.project_already_processed" title="Link to this definition"></a></dt>
+<dd><p>Check if output-of-di already has results for this project folder.
+If any result JSON exists under that folder → skip the whole project.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>project_folder</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – e.g. “Energinet_onshore_offshore”</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if already processed, False if needs processing</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_extraction_using_di.TransformerDocumentProcessor.list_project_files">
+<span class="sig-name descname"><span class="pre">list_project_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_folder</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_extraction_using_di.html#TransformerDocumentProcessor.list_project_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_extraction_using_di.TransformerDocumentProcessor.list_project_files" title="Link to this definition"></a></dt>
+<dd><p>List all PDF/DOCX/XLSX files in the project folder in input-document-center.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>project_folder</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – e.g. “Energinet_onshore_offshore”</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of file info dicts</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><em>List</em></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_extraction_using_di.TransformerDocumentProcessor.download_to_temp">
+<span class="sig-name descname"><span class="pre">download_to_temp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">blob_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_extraction_using_di.html#TransformerDocumentProcessor.download_to_temp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_extraction_using_di.TransformerDocumentProcessor.download_to_temp" title="Link to this definition"></a></dt>
+<dd><p>Download a blob file to a local temp folder for processing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Local path of downloaded file</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>blob_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – </p></li>
+<li><p><strong>temp_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – </p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_extraction_using_di.TransformerDocumentProcessor.upload_result_to_blob">
+<span class="sig-name descname"><span class="pre">upload_result_to_blob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_extraction_using_di.html#TransformerDocumentProcessor.upload_result_to_blob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_extraction_using_di.TransformerDocumentProcessor.upload_result_to_blob" title="Link to this definition"></a></dt>
+<dd><p>Upload a DI result JSON to output-of-di/{project_folder}/filename.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>local_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Local path of the result JSON</p></li>
+<li><p><strong>project_folder</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – e.g. “Energinet_onshore_offshore”</p></li>
+<li><p><strong>filename</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – e.g. “spec_di_result.json”</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_extraction_using_di.TransformerDocumentProcessor.calculate_hash">
+<span class="sig-name descname"><span class="pre">calculate_hash</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_extraction_using_di.html#TransformerDocumentProcessor.calculate_hash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_extraction_using_di.TransformerDocumentProcessor.calculate_hash" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filepath</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_extraction_using_di.TransformerDocumentProcessor.is_duplicate">
+<span class="sig-name descname"><span class="pre">is_duplicate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_extraction_using_di.html#TransformerDocumentProcessor.is_duplicate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_extraction_using_di.TransformerDocumentProcessor.is_duplicate" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>local_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.14)"><em>Tuple</em></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)">bool</a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)">str</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_extraction_using_di.TransformerDocumentProcessor.detect_image_pages">
+<span class="sig-name descname"><span class="pre">detect_image_pages</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pdf_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_extraction_using_di.html#TransformerDocumentProcessor.detect_image_pages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_extraction_using_di.TransformerDocumentProcessor.detect_image_pages" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pdf_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.14)"><em>List</em></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)">int</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_extraction_using_di.TransformerDocumentProcessor.process_with_di">
+<span class="sig-name descname"><span class="pre">process_with_di</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">local_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_extraction_using_di.html#TransformerDocumentProcessor.process_with_di"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_extraction_using_di.TransformerDocumentProcessor.process_with_di" title="Link to this definition"></a></dt>
+<dd><p>Run Azure Document Intelligence on a local file.
+Saves result JSON locally, then uploads to output-of-di blob.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>result dict with success flag and output blob path</p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>local_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – </p></li>
+<li><p><strong>file_info</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a>) – </p></li>
+<li><p><strong>temp_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – </p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_extraction_using_di.TransformerDocumentProcessor.process_single_file">
+<span class="sig-name descname"><span class="pre">process_single_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_extraction_using_di.html#TransformerDocumentProcessor.process_single_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_extraction_using_di.TransformerDocumentProcessor.process_single_file" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Full pipeline for one file:</dt><dd><p>Download from blob → duplicate check → DI → upload result</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_info</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a>) – </p></li>
+<li><p><strong>temp_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.14)"><em>Dict</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="doc_extraction_using_di.TransformerDocumentProcessor.process_project">
+<span class="sig-name descname"><span class="pre">process_project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_folder</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/doc_extraction_using_di.html#TransformerDocumentProcessor.process_project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#doc_extraction_using_di.TransformerDocumentProcessor.process_project" title="Link to this definition"></a></dt>
+<dd><p>Process all files for one project folder from Azure Blob.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>project_folder</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a>) – Folder name in input-document-center blob,
+e.g. “Energinet_onshore_offshore”
+This comes directly from what the UI created.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="chunk_by_title_semantic_blob.html" class="btn btn-neutral float-left" title="chunk_by_title_semantic_blob module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="doc_filling_blob.html" class="btn btn-neutral float-right" title="doc_filling_blob module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Your Team.
+      <span class="lastupdated">Last updated on Mar 11, 2026.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

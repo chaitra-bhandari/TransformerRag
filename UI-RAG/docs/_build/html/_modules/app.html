@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>app &mdash; Transformer Spec RAG 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=8d563738"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Transformer Spec RAG
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Architecture &amp; Design</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">UI-RAG</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Support</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Transformer Spec RAG</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">app</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for app</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Transformer Spec RAG — FastAPI Backend</span>
+<span class="sd">=================================================================</span>
+<span class="sd">Pipeline flow (triggered on every new project upload):</span>
+<span class="sd">  1. DI extraction        → output-of-di/{project}/</span>
+<span class="sd">  2. Chunking             → chunked-output/all_chunks.json</span>
+<span class="sd">  3. Azure AI Search indexing → vector search index</span>
+<span class="sd">  4. RAG extraction       → JSON from rag_query.py (parameters hardcoded)</span>
+<span class="sd">  5. Order doc generation → order-design-documents/{project}/Order_A.docx</span>
+<span class="sd">                            order-design-documents/{project}/Order_B.docx</span>
+
+<span class="sd">Containers (configured in .env):</span>
+<span class="sd">  - transformer-input          : uploaded raw PDFs/docx</span>
+<span class="sd">  - output-of-di               : DI JSON results</span>
+<span class="sd">  - chunked-output             : all_chunks.json</span>
+<span class="sd">  - order-templates            : Order_A.docx, Order_B.docx templates</span>
+<span class="sd">  - order-design-documents     : generated/filled order documents</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">os_module</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dotenv</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dotenv</span>
+<span class="n">load_dotenv</span><span class="p">()</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">faiss</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">os_module</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">azure.storage.blob</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlobServiceClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">openai</span><span class="w"> </span><span class="kn">import</span> <span class="n">AzureOpenAI</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">UploadFile</span><span class="p">,</span> <span class="n">File</span><span class="p">,</span> <span class="n">Form</span><span class="p">,</span> <span class="n">HTTPException</span><span class="p">,</span> <span class="n">BackgroundTasks</span><span class="p">,</span> <span class="n">Header</span><span class="p">,</span> <span class="n">Depends</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.responses</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTMLResponse</span><span class="p">,</span> <span class="n">JSONResponse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.middleware.cors</span><span class="w"> </span><span class="kn">import</span> <span class="n">CORSMiddleware</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.staticfiles</span><span class="w"> </span><span class="kn">import</span> <span class="n">StaticFiles</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+
+
+<span class="c1">#Congifiguring values from .env</span>
+<span class="n">API_KEY</span>                    <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;API_KEY&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">AZURE_CONN_STR</span>             <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;AZURE_STORAGE_CONNECTION_STRING&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">BLOB_INPUT_CONTAINER</span>       <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;BLOB_INPUT_CONTAINER&quot;</span><span class="p">,</span>       <span class="s2">&quot;transformer-input&quot;</span><span class="p">)</span>
+<span class="n">BLOB_OUTPUT_CONTAINER</span>      <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;BLOB_OUTPUT_CONTAINER&quot;</span><span class="p">,</span>      <span class="s2">&quot;output-of-di&quot;</span><span class="p">)</span>
+<span class="n">BLOB_DESIGN_DOCS_CONTAINER</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;BLOB_DESIGN_DOCS_CONTAINER&quot;</span><span class="p">,</span> <span class="s2">&quot;order-design-documents&quot;</span><span class="p">)</span>
+
+<span class="c1">#Azure AI Search config</span>
+<span class="n">AZURE_SEARCH_ENDPOINT</span>      <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;AZURE_SEARCH_ENDPOINT&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">AZURE_SEARCH_KEY</span>           <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;AZURE_SEARCH_KEY&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">AZURE_SEARCH_INDEX</span>         <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;AZURE_SEARCH_INDEX&quot;</span><span class="p">,</span> <span class="s2">&quot;transformer-chunks&quot;</span><span class="p">)</span>
+
+<span class="c1">#OpenAI config</span>
+<span class="n">OPENAI_KEY</span>                 <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;OPENAI_KEY&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">OPENAI_ENDPOINT</span>            <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;OPENAI_ENDPOINT&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">CHAT_MODEL</span>                 <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;CHAT_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;gpt-4o&quot;</span><span class="p">)</span>
+
+<span class="n">TEMP_DIR</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;temp_uploads&quot;</span><span class="p">)</span>
+<span class="n">TEMP_DIR</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">Path</span><span class="p">(</span><span class="s2">&quot;static&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">ALLOWED_EXTENSIONS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;.pdf&quot;</span><span class="p">,</span> <span class="s2">&quot;.docx&quot;</span><span class="p">,</span> <span class="s2">&quot;.xlsx&quot;</span><span class="p">}</span>
+<span class="n">MAX_FILE_SIZE_MB</span>   <span class="o">=</span> <span class="mi">100</span>
+<span class="n">MAX_FILE_SIZE_B</span>    <span class="o">=</span> <span class="n">MAX_FILE_SIZE_MB</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span>
+<span class="n">EMBEDDING_MODEL</span> <span class="o">=</span> <span class="s2">&quot;text-embedding-3-large&quot;</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">API_KEY</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; WARNING: API_KEY not set in .env — all routes are unprotected!&quot;</span><span class="p">)</span>
+
+
+
+<span class="c1"># APP + MIDDLEWARE</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Transformer Spec RAG&quot;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+
+<span class="n">app</span><span class="o">.</span><span class="n">add_middleware</span><span class="p">(</span>
+    <span class="n">CORSMiddleware</span><span class="p">,</span>
+    <span class="n">allow_origins</span><span class="o">=</span><span class="p">[</span>
+        <span class="s2">&quot;http://localhost:8000&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;http://127.0.0.1:8000&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;http://localhost:3000&quot;</span><span class="p">,</span>      <span class="c1"># React dev server default</span>
+        <span class="s2">&quot;http://127.0.0.1:3000&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;http://localhost:5173&quot;</span><span class="p">,</span>      <span class="c1"># Vite dev server default</span>
+        <span class="s2">&quot;http://127.0.0.1:5173&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;http://localhost:8080&quot;</span><span class="p">,</span>      <span class="c1"># Other common ports</span>
+        <span class="s2">&quot;http://127.0.0.1:8080&quot;</span><span class="p">,</span>
+    <span class="p">],</span>
+    <span class="n">allow_methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">,</span> <span class="s2">&quot;PUT&quot;</span><span class="p">,</span> <span class="s2">&quot;DELETE&quot;</span><span class="p">,</span> <span class="s2">&quot;OPTIONS&quot;</span><span class="p">],</span>
+    <span class="n">allow_headers</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">],</span>
+    <span class="n">allow_credentials</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">expose_headers</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Content-Disposition&quot;</span><span class="p">,</span> <span class="s2">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s2">&quot;Content-Length&quot;</span><span class="p">],</span>
+    <span class="n">max_age</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">app</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="s2">&quot;/static&quot;</span><span class="p">,</span> <span class="n">StaticFiles</span><span class="p">(</span><span class="n">directory</span><span class="o">=</span><span class="s2">&quot;static&quot;</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;static&quot;</span><span class="p">)</span>
+
+
+
+
+<div class="viewcode-block" id="sanitize_name">
+<a class="viewcode-back" href="../app.html#app.sanitize_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">sanitize_name</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[^a-zA-Z0-9_\-]&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="make_blob_folder">
+<a class="viewcode-back" href="../app.html#app.make_blob_folder">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_blob_folder</span><span class="p">(</span><span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">transformer_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">safe</span> <span class="o">=</span> <span class="n">sanitize_name</span><span class="p">(</span><span class="n">project_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">transformer_type</span> <span class="ow">and</span> <span class="n">transformer_type</span> <span class="o">!=</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">safe</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">transformer_type</span><span class="si">}</span><span class="s2">/&quot;</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">safe</span><span class="si">}</span><span class="s2">/&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="validate_file">
+<a class="viewcode-back" href="../app.html#app.validate_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">validate_file</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="n">ext</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">ext</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ALLOWED_EXTENSIONS</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&#39;: type &#39;</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">&#39; not allowed. Accepted: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ALLOWED_EXTENSIONS</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">return</span> <span class="s2">&quot;&quot;</span></div>
+
+
+
+
+<span class="c1">#Upload all the docs from UI into blob: input-document-center</span>
+<div class="viewcode-block" id="upload_file_to_blob">
+<a class="viewcode-back" href="../app.html#app.upload_file_to_blob">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">upload_file_to_blob</span><span class="p">(</span><span class="n">local_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">blob_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">azure.storage.blob</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlobServiceClient</span>
+    <span class="n">client</span>    <span class="o">=</span> <span class="n">BlobServiceClient</span><span class="o">.</span><span class="n">from_connection_string</span><span class="p">(</span><span class="n">AZURE_CONN_STR</span><span class="p">)</span>
+    <span class="n">container</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_container_client</span><span class="p">(</span><span class="n">BLOB_INPUT_CONTAINER</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">local_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">container</span><span class="o">.</span><span class="n">upload_blob</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">blob_path</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">f</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[BLOB] Uploaded: </span><span class="si">{</span><span class="n">local_path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="n">BLOB_INPUT_CONTAINER</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">blob_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<span class="c1">#Extract the data from PDFs using document intelligence, and store the output json in output-of-di</span>
+<div class="viewcode-block" id="trigger_di_processing">
+<a class="viewcode-back" href="../app.html#app.trigger_di_processing">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">trigger_di_processing</span><span class="p">(</span><span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">blob_folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">doc_extraction_using_di</span><span class="w"> </span><span class="kn">import</span> <span class="n">TransformerDocumentProcessor</span>
+    <span class="n">processor</span> <span class="o">=</span> <span class="n">TransformerDocumentProcessor</span><span class="p">()</span>
+    <span class="n">processor</span><span class="o">.</span><span class="n">process_project</span><span class="p">(</span><span class="n">blob_folder</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[DI] Completed: </span><span class="si">{</span><span class="n">blob_folder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<span class="c1">#Chunk all DI JSONs → chunked-output/all_chunks.json</span>
+<div class="viewcode-block" id="trigger_chunking">
+<a class="viewcode-back" href="../app.html#app.trigger_chunking">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">trigger_chunking</span><span class="p">(</span><span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">blob_folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">chunk_by_title_semantic_blob</span><span class="w"> </span><span class="kn">import</span> <span class="n">DocumentChunker</span>
+    <span class="n">chunker</span> <span class="o">=</span> <span class="n">DocumentChunker</span><span class="p">()</span>
+    <span class="n">chunker</span><span class="o">.</span><span class="n">process_all_projects</span><span class="p">()</span>
+    <span class="n">chunker</span><span class="o">.</span><span class="n">save_chunks</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[CHUNKING] Completed: </span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<span class="c1">#Run RAG extraction then fill Order A and Order B templates.</span>
+<div class="viewcode-block" id="trigger_order_generation">
+<a class="viewcode-back" href="../app.html#app.trigger_order_generation">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">trigger_order_generation</span><span class="p">(</span><span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Flow:</span>
+<span class="sd">      1. query_rag()  → uses Azure AI Search + LLM</span>
+<span class="sd">                        → extracts all parameters from rag_query.py</span>
+<span class="sd">                        → returns combined JSON string</span>
+<span class="sd">      2. DocxFiller() → downloads template from order-templates/</span>
+<span class="sd">                        → fills it with the extracted JSON</span>
+<span class="sd">                        → uploads filled .docx to order-design-documents/{project_name}/</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">rag_query</span><span class="w"> </span><span class="kn">import</span> <span class="n">query_rag</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">doc_filling_blob</span><span class="w"> </span><span class="kn">import</span> <span class="n">DocxFiller</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[ORDER GEN] Starting RAG extraction for project: </span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1">#RAG extraction (one run covers both orders — same data source)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">json_str</span>  <span class="o">=</span> <span class="n">query_rag</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">project_name</span><span class="p">,</span> <span class="n">project_name</span><span class="o">=</span><span class="n">project_name</span><span class="p">)</span>
+        <span class="n">json_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_str</span><span class="p">)</span>
+        <span class="n">json_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;extracted_json&quot;</span><span class="p">)</span>
+        <span class="n">json_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Save JSON to local file for evaluation</span>
+        <span class="n">json_filename</span> <span class="o">=</span> <span class="n">json_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">_extracted.json&quot;</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+         <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ORDER GEN] JSON saved locally: </span><span class="si">{</span><span class="n">json_filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ORDER GEN] RAG extraction complete — </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">json_data</span><span class="p">)</span><span class="si">}</span><span class="s2"> parameters extracted&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ORDER GEN] Parameters: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">json_data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">json_data</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ORDER GEN] JSON content: </span><span class="si">{</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span><span class="w"> </span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)[:</span><span class="mi">500</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ORDER GEN ERROR] RAG extraction failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span>
+
+    <span class="c1"># Fill Order A and Order B with the same extracted JSON</span>
+    <span class="k">for</span> <span class="n">order_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">]:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ORDER GEN] Filling Order </span><span class="si">{</span><span class="n">order_type</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+            <span class="n">filler</span>    <span class="o">=</span> <span class="n">DocxFiller</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="n">order_type</span><span class="o">=</span><span class="n">order_type</span><span class="p">)</span>
+            <span class="n">blob_path</span> <span class="o">=</span> <span class="n">filler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">project_name</span><span class="o">=</span><span class="n">project_name</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ORDER GEN] Order </span><span class="si">{</span><span class="n">order_type</span><span class="si">}</span><span class="s2"> saved → </span><span class="si">{</span><span class="n">blob_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># Log and continue — don&#39;t abort the whole pipeline if one order fails</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[ORDER GEN ERROR] Order </span><span class="si">{</span><span class="n">order_type</span><span class="si">}</span><span class="s2"> failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># BACKGROUND PIPELINE</span>
+
+
+<div class="viewcode-block" id="run_pipeline">
+<a class="viewcode-back" href="../app.html#app.run_pipeline">[docs]</a>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">run_pipeline</span><span class="p">(</span><span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">blob_folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Full end-to-end pipeline. Runs in background after file upload.</span>
+<span class="sd">    DI → Chunking → RAG Extraction → Order Doc Generation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">70</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[PIPELINE] Starting for project: </span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[PIPELINE] Blob folder: </span><span class="si">{</span><span class="n">blob_folder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">70</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1">#  1: Document Intelligence</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[PIPELINE] Step 1/3 — Document Intelligence&quot;</span><span class="p">)</span>
+        <span class="n">trigger_di_processing</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">blob_folder</span><span class="p">)</span>
+
+        <span class="c1">#  2: Chunking</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[PIPELINE] Step 2/3 — Chunking&quot;</span><span class="p">)</span>
+        <span class="n">trigger_chunking</span><span class="p">(</span><span class="n">project_name</span><span class="p">,</span> <span class="n">blob_folder</span><span class="p">)</span>
+
+        <span class="c1">#  3: RAG Extraction + Order Document Generation</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[PIPELINE] Step 3/3 — RAG Extraction &amp; Order Generation&quot;</span><span class="p">)</span>
+        <span class="n">trigger_order_generation</span><span class="p">(</span><span class="n">project_name</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">70</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[PIPELINE]  DONE: </span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">70</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[PIPELINE ERROR] </span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">traceback</span>
+        <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span></div>
+
+
+
+
+<span class="c1"># ORDER LOOKUP  (reads from order-design-documents container)</span>
+<div class="viewcode-block" id="find_order_in_blob">
+<a class="viewcode-back" href="../app.html#app.find_order_in_blob">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_order_in_blob</span><span class="p">(</span><span class="n">order_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                       <span class="n">transformer_filter</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Search order-design-documents/{project_name}/ for an Order A or B docx.</span>
+<span class="sd">    Returns {&quot;found&quot;: True/False, ...}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">azure.storage.blob</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlobServiceClient</span>
+
+    <span class="n">blob_svc</span>         <span class="o">=</span> <span class="n">BlobServiceClient</span><span class="o">.</span><span class="n">from_connection_string</span><span class="p">(</span><span class="n">AZURE_CONN_STR</span><span class="p">)</span>
+    <span class="n">design_container</span> <span class="o">=</span> <span class="n">blob_svc</span><span class="o">.</span><span class="n">get_container_client</span><span class="p">(</span><span class="n">BLOB_DESIGN_DOCS_CONTAINER</span><span class="p">)</span>
+
+    <span class="n">prefix</span>    <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">/&quot;</span>
+    <span class="n">all_blobs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">design_container</span><span class="o">.</span><span class="n">list_blobs</span><span class="p">(</span><span class="n">name_starts_with</span><span class="o">=</span><span class="n">prefix</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">all_blobs</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;found&quot;</span><span class="p">:</span>   <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;reason&quot;</span><span class="p">:</span>  <span class="s2">&quot;no_project&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;No documents found for project &#39;</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&#39;.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Upload your spec files first using the &#39;New Project&#39; option.&quot;</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+
+    <span class="n">matches</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">all_blobs</span><span class="p">:</span>
+        <span class="n">blob_lower</span>  <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="n">order_match</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;order_</span><span class="si">{</span><span class="n">order_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">blob_lower</span> <span class="ow">or</span>
+                       <span class="sa">f</span><span class="s2">&quot;order </span><span class="si">{</span><span class="n">order_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span> <span class="ow">in</span> <span class="n">blob_lower</span> <span class="ow">or</span>
+                       <span class="sa">f</span><span class="s2">&quot;order</span><span class="si">{</span><span class="n">order_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="ow">in</span> <span class="n">blob_lower</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">order_match</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">transformer_filter</span> <span class="ow">and</span> <span class="n">transformer_filter</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">blob_lower</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">matches</span><span class="p">:</span>
+        <span class="n">available</span>  <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">all_blobs</span><span class="p">]</span>
+        <span class="n">filter_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; (</span><span class="si">{</span><span class="n">transformer_filter</span><span class="si">}</span><span class="s2">)&quot;</span> <span class="k">if</span> <span class="n">transformer_filter</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;found&quot;</span><span class="p">:</span>   <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;reason&quot;</span><span class="p">:</span>  <span class="s2">&quot;not_generated&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Order </span><span class="si">{</span><span class="n">order_type</span><span class="si">}{</span><span class="n">filter_msg</span><span class="si">}</span><span class="s2"> not yet generated for &#39;</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&#39;.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Available files: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">available</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">available</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;none&#39;</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Generating now — please wait a moment and try again.&quot;</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matches</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">filenames</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;found&quot;</span><span class="p">:</span>   <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;reason&quot;</span><span class="p">:</span>  <span class="s2">&quot;ambiguous&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Multiple Order </span><span class="si">{</span><span class="n">order_type</span><span class="si">}</span><span class="s2"> files found for &#39;</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&#39;:</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
+                <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;  • </span><span class="si">{</span><span class="n">f</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">])</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Please specify: &#39;Order </span><span class="si">{</span><span class="n">order_type</span><span class="si">}</span><span class="s2"> onshore&#39; or &#39;Order </span><span class="si">{</span><span class="n">order_type</span><span class="si">}</span><span class="s2"> offshore&#39;&quot;</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;found&quot;</span><span class="p">:</span>     <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;blob_name&quot;</span><span class="p">:</span> <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="s2">&quot;filename&quot;</span><span class="p">:</span>  <span class="n">matches</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="p">}</span></div>
+
+
+
+
+<span class="c1"># RAG / CHAT HELPERS</span>
+<div class="viewcode-block" id="run_rag_query">
+<a class="viewcode-back" href="../app.html#app.run_rag_query">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_rag_query</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">transformer_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">rag_query</span><span class="w"> </span><span class="kn">import</span> <span class="n">query_rag</span>
+    <span class="k">return</span> <span class="n">query_rag</span><span class="p">(</span><span class="n">query</span><span class="o">=</span><span class="n">message</span><span class="p">,</span> <span class="n">project_name</span><span class="o">=</span><span class="n">project_name</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="answer_general_question">
+<a class="viewcode-back" href="../app.html#app.answer_general_question">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">answer_general_question</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Answer general questions using FAISS index from Azure containers + OpenAI</span>
+<span class="sd">    </span>
+<span class="sd">    Uses the SAME filtering logic as rag_query.py but with VECTOR SEARCH ONLY</span>
+<span class="sd">    </span>
+<span class="sd">    Flow:</span>
+<span class="sd">    1. Download FAISS index from Azure blob</span>
+<span class="sd">    2. Download metadata pickle from Azure blob</span>
+<span class="sd">    3. Prepare project (filter chunks by project_name upfront)</span>
+<span class="sd">    4. Embed query with OpenAI</span>
+<span class="sd">    5. Search FAISS with larger k to account for filtering</span>
+<span class="sd">    6. Filter vector results by project chunks</span>
+<span class="sd">    7. Build context from filtered chunks</span>
+<span class="sd">    8. Call OpenAI to generate answer</span>
+<span class="sd">    9. Return answer with sources</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        message: User&#39;s question</span>
+<span class="sd">        project_name: Project to filter chunks for</span>
+<span class="sd">    </span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Answer text with sources</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">========== ANSWER_GENERAL_QUESTION CALLED ==========&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Message: </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Project: </span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Validate credentials</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">AZURE_CONN_STR</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;Error: Azure Storage credentials not configured in .env&quot;</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">OPENAI_KEY</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">OPENAI_ENDPOINT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;Error: OpenAI credentials not configured in .env&quot;</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] Starting Q&amp;A for project: </span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Initialize Azure Blob Client ───</span>
+        <span class="n">blob_client</span> <span class="o">=</span> <span class="n">BlobServiceClient</span><span class="o">.</span><span class="n">from_connection_string</span><span class="p">(</span><span class="n">AZURE_CONN_STR</span><span class="p">)</span>
+        
+        <span class="c1"># Step 1: Download FAISS index ───</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] Downloading FAISS index...&quot;</span><span class="p">)</span>
+        <span class="n">index_container</span> <span class="o">=</span> <span class="n">blob_client</span><span class="o">.</span><span class="n">get_container_client</span><span class="p">(</span><span class="s2">&quot;faiss-indexes&quot;</span><span class="p">)</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">index_blob</span> <span class="o">=</span> <span class="n">index_container</span><span class="o">.</span><span class="n">get_blob_client</span><span class="p">(</span><span class="s2">&quot;docs.index&quot;</span><span class="p">)</span>
+            <span class="n">index_data</span> <span class="o">=</span> <span class="n">index_blob</span><span class="o">.</span><span class="n">download_blob</span><span class="p">()</span><span class="o">.</span><span class="n">readall</span><span class="p">()</span>
+            
+            <span class="c1"># Write temporarily to disk (FAISS requires file path)</span>
+            <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">delete</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.index&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+                <span class="n">tmp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">index_data</span><span class="p">)</span>
+                <span class="n">tmp_path</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">name</span>
+            
+            <span class="c1"># Load from temporary file</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">faiss</span><span class="o">.</span><span class="n">read_index</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span>
+            
+            <span class="c1"># Clean up temp file</span>
+            <span class="n">os_module</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span>
+            
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] FAISS index loaded: </span><span class="si">{</span><span class="n">index</span><span class="o">.</span><span class="n">ntotal</span><span class="si">}</span><span class="s2"> total vectors&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] Error loading index: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Error: Could not load FAISS index. </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        
+        <span class="c1"># 2: Download metadata pickle ───</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] Downloading metadata...&quot;</span><span class="p">)</span>
+        <span class="n">metadata_container</span> <span class="o">=</span> <span class="n">blob_client</span><span class="o">.</span><span class="n">get_container_client</span><span class="p">(</span><span class="s2">&quot;faiss-metadata&quot;</span><span class="p">)</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">metadata_blob</span> <span class="o">=</span> <span class="n">metadata_container</span><span class="o">.</span><span class="n">get_blob_client</span><span class="p">(</span><span class="s2">&quot;docs.pkl&quot;</span><span class="p">)</span>
+            <span class="n">metadata_data</span> <span class="o">=</span> <span class="n">metadata_blob</span><span class="o">.</span><span class="n">download_blob</span><span class="p">()</span><span class="o">.</span><span class="n">readall</span><span class="p">()</span>
+            
+            <span class="c1"># Load pickle from bytes (no temp file needed)</span>
+            <span class="n">all_metadata</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">metadata_data</span><span class="p">))</span>
+            
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] Metadata loaded: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">all_metadata</span><span class="p">)</span><span class="si">}</span><span class="s2"> total chunks&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] Error loading metadata: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Error: Could not load metadata. </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        
+        <span class="c1"># Step 3: PREPARE PROJECT - Filter to project chunks only ───</span>
+        <span class="c1"># This is the KEY step from rag_query.py!</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] Preparing project-specific indices...&quot;</span><span class="p">)</span>
+        <span class="n">project_indices</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">all_metadata</span><span class="p">):</span>
+            <span class="n">chunk_project</span> <span class="o">=</span> <span class="n">chunk</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;project_name&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">chunk_project</span> <span class="o">==</span> <span class="n">project_name</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                <span class="n">project_indices</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">project_indices</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] No chunks found for project &#39;</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;No relevant information found for project &#39;</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">project_indices</span><span class="p">)</span><span class="si">}</span><span class="s2"> chunks for project &#39;</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Step 4: Initialize OpenAI client and embed query </span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] Embedding query...&quot;</span><span class="p">)</span>
+        
+        <span class="n">openai_client</span> <span class="o">=</span> <span class="n">AzureOpenAI</span><span class="p">(</span>
+            <span class="n">api_key</span><span class="o">=</span><span class="n">OPENAI_KEY</span><span class="p">,</span>
+            <span class="n">api_version</span><span class="o">=</span><span class="s2">&quot;2024-02-15-preview&quot;</span><span class="p">,</span>
+            <span class="n">azure_endpoint</span><span class="o">=</span><span class="n">OPENAI_ENDPOINT</span>
+        <span class="p">)</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">embedding_response</span> <span class="o">=</span> <span class="n">openai_client</span><span class="o">.</span><span class="n">embeddings</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+                <span class="nb">input</span><span class="o">=</span><span class="p">[</span><span class="n">message</span><span class="p">],</span>
+                <span class="n">model</span><span class="o">=</span><span class="n">EMBEDDING_MODEL</span>
+            <span class="p">)</span>
+            <span class="n">query_embedding</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">embedding_response</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">embedding</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] Error embedding query: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Error: Could not embed query. </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        
+        <span class="c1">#  5: VECTOR SEARCH with larger k (like rag_query.py)</span>
+        <span class="c1"># Search with 3x k to account for filtering by project</span>
+        <span class="n">search_k</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_metadata</span><span class="p">))</span>  <span class="c1"># Use larger k like rag_query does</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] Searching FAISS index (search_k=</span><span class="si">{</span><span class="n">search_k</span><span class="si">}</span><span class="s2">)...&quot;</span><span class="p">)</span>
+        
+        <span class="n">distances</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">query_embedding</span><span class="p">,</span> <span class="n">search_k</span><span class="p">)</span>
+        
+        <span class="c1"># 6: FILTER to project indices only (like rag_query.py) </span>
+        <span class="n">valid_chunks</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_metadata</span><span class="p">)</span> <span class="ow">and</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">project_indices</span><span class="p">:</span>
+                <span class="n">chunk_metadata</span> <span class="o">=</span> <span class="n">all_metadata</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+                <span class="n">valid_chunks</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="n">chunk_metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+                    <span class="s1">&#39;doc_name&#39;</span><span class="p">:</span> <span class="n">chunk_metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;source_document&#39;</span><span class="p">,</span> <span class="s1">&#39;Unknown Document&#39;</span><span class="p">),</span>
+                    <span class="s1">&#39;page&#39;</span><span class="p">:</span> <span class="n">chunk_metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                    <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="n">idx</span>
+                <span class="p">})</span>
+                
+                <span class="c1"># Stop at 20 chunks</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">valid_chunks</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">20</span><span class="p">:</span>
+                    <span class="k">break</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">valid_chunks</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] No valid chunks found after filtering&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;No relevant information found for project &#39;</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&#39;.&quot;</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">valid_chunks</span><span class="p">)</span><span class="si">}</span><span class="s2"> relevant chunks for project &#39;</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># 7: Build context from filtered chunks</span>
+        <span class="n">context_parts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">valid_chunks</span><span class="p">:</span>
+            <span class="n">content</span> <span class="o">=</span> <span class="n">chunk</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            
+            <span class="k">if</span> <span class="n">content</span><span class="p">:</span>  <span class="c1"># Only add non-empty chunks</span>
+                <span class="n">context_parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+                      
+                        
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[DEBUG] ───── CHUNK </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">valid_chunks</span><span class="p">)</span><span class="si">}</span><span class="s2"> ─────&quot;</span><span class="p">)</span>
+           
+            
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[DEBUG] Content Length: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="si">}</span><span class="s2"> characters&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[DEBUG] Content Preview (first 300 chars):&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[DEBUG] </span><span class="si">{</span><span class="n">content</span><span class="p">[:</span><span class="mi">50000</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[DEBUG] Full Content:&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[DEBUG] </span><span class="si">{</span><span class="n">content</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[DEBUG] &quot;</span><span class="p">)</span>
+        
+        <span class="n">context</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">---</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">context_parts</span><span class="p">)</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="n">context</span><span class="p">[:</span><span class="mi">50000</span><span class="p">]</span>  <span class="c1"># Limit context size</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[DEBUG] Context size: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">context</span><span class="p">)</span><span class="si">}</span><span class="s2"> characters from </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">valid_chunks</span><span class="p">)</span><span class="si">}</span><span class="s2"> chunks&quot;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">context</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">context</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">50</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] Context too small or empty&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s2">&quot;Error: Retrieved chunks contain insufficient content to answer.&quot;</span>
+        
+        <span class="c1">#8: Call OpenAI </span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] Calling OpenAI GPT model...&quot;</span><span class="p">)</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">openai_client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+                <span class="n">model</span><span class="o">=</span><span class="n">CHAT_MODEL</span><span class="p">,</span>
+                <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;system&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;You are a technical assistant for the &#39;</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&#39; project. &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;Answer the user&#39;s question using ONLY the provided context. &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;If the information is clearly in the context, provide it directly. &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;Be precise and technical. &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;Do not use markdown formatting (no **, __, ##, *, etc). &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;If information is not in the context, say &#39;This information is not available in the current documents.&#39;&quot;</span>
+                        <span class="p">)</span>
+                    <span class="p">},</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span>
+                        <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Context:</span><span class="se">\n</span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">Question: </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">}</span>
+                <span class="p">],</span>
+                <span class="n">temperature</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                <span class="n">max_tokens</span><span class="o">=</span><span class="mi">1000</span>
+            <span class="p">)</span>
+            
+            <span class="n">answer</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">choices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">content</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] OpenAI response received&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] Error calling OpenAI: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Error: Could not generate answer. </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        
+        <span class="c1">#  9: Clean up answer (remove markdown)</span>
+        <span class="n">answer</span> <span class="o">=</span> <span class="n">answer</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;**&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">answer</span> <span class="o">=</span> <span class="n">answer</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;__&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">answer</span> <span class="o">=</span> <span class="n">answer</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;##&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">answer</span> <span class="o">=</span> <span class="n">answer</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">answer</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">answer</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+        
+        <span class="c1">#Step 10: Build sources section</span>
+        <span class="n">sources_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">Sources:&quot;</span>
+        
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">valid_chunks</span><span class="p">[:</span><span class="mi">5</span><span class="p">],</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">doc_name</span> <span class="o">=</span> <span class="n">chunk</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;doc_name&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;Unknown Document&#39;</span>
+            <span class="n">page</span> <span class="o">=</span> <span class="n">chunk</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">doc_name</span> <span class="ow">or</span> <span class="n">doc_name</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                <span class="n">doc_name</span> <span class="o">=</span> <span class="s1">&#39;Unknown Document&#39;</span>
+            
+            <span class="c1"># Clean up document name</span>
+            <span class="n">doc_name</span> <span class="o">=</span> <span class="n">doc_name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.json&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.pdf&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.docx&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            
+            <span class="k">if</span> <span class="n">page</span> <span class="ow">and</span> <span class="n">page</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">sources_text</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="n">doc_name</span><span class="si">}</span><span class="s2">, Page </span><span class="si">{</span><span class="n">page</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sources_text</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="n">doc_name</span><span class="si">}</span><span class="s2">&quot;</span>
+        
+        <span class="n">final_answer</span> <span class="o">=</span> <span class="n">answer</span> <span class="o">+</span> <span class="n">sources_text</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] Answer generated successfully</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">final_answer</span>
+        
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Q&amp;A] Unexpected error: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">traceback</span>
+        <span class="n">traceback</span><span class="o">.</span><span class="n">print_exc</span><span class="p">()</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Error generating answer: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span></div>
+
+
+<span class="c1">#Parse project name from free-text message.</span>
+<div class="viewcode-block" id="extract_project_from_message">
+<a class="viewcode-back" href="../app.html#app.extract_project_from_message">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_project_from_message</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Supported formats:</span>
+<span class="sd">        &quot;Energinet_VSR: what is the rated voltage?&quot;</span>
+<span class="sd">        &quot;Energinet_VSR — what is the rated voltage?&quot;</span>
+<span class="sd">        &quot;TenneT_715MVA what is the cost?&quot;</span>
+<span class="sd">        &quot;for project TenneT_715MVA&quot;</span>
+<span class="sd">        &quot;rated voltage for project TenneT_715MVA&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Pattern 1: &quot;ProjectName: ...&quot;  /  &quot;ProjectName — ...&quot;  /  &quot;ProjectName - ...&quot;</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^([A-Za-z0-9_]+)\s*[:—\-]&#39;</span><span class="p">,</span> <span class="n">message</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Pattern 2: &quot;... for project ProjectName&quot; - get the ENTIRE word after &quot;project&quot;</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;for\s+project\s+([A-Za-z0-9_]+)&#39;</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+        <span class="n">candidate</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># Make sure it&#39;s not a common word</span>
+        <span class="k">if</span> <span class="n">candidate</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;the&#39;</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;an&#39;</span><span class="p">,</span> <span class="s1">&#39;onshore&#39;</span><span class="p">,</span> <span class="s1">&#39;offshore&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">candidate</span>
+
+    <span class="c1"># Pattern 3: first token that looks like project name (has underscore or digits)</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;_&#39;</span> <span class="ow">in</span> <span class="n">token</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>  <span class="c1"># Project names usually have _ and reasonable length</span>
+            <span class="c1"># Clean up any trailing punctuation</span>
+            <span class="n">token</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;?.,!;:&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^[A-Za-z0-9_]+$&#39;</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">token</span>
+
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+
+<span class="c1"># PYDANTIC MODELS</span>
+<div class="viewcode-block" id="ChatRequest">
+<a class="viewcode-back" href="../app.html#app.ChatRequest">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ChatRequest</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">message</span><span class="p">:</span>          <span class="nb">str</span>
+    <span class="n">project_name</span><span class="p">:</span>     <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">transformer_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<span class="c1"># ROUTES</span>
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="n">response_class</span><span class="o">=</span><span class="n">HTMLResponse</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">serve_ui</span><span class="p">():</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;static/index.html&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">HTMLResponse</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span> <span class="k">else</span>
+                        <span class="s2">&quot;&lt;h1&gt;Place index.html in /static/&lt;/h1&gt;&quot;</span><span class="p">)</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/api/projects&quot;</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">list_projects</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    List all projects from Order-Design-Docs container.</span>
+<span class="sd">    Includes latest status and available orders for each.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">azure.storage.blob</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlobServiceClient</span>
+    
+    <span class="n">blob_svc</span>  <span class="o">=</span> <span class="n">BlobServiceClient</span><span class="o">.</span><span class="n">from_connection_string</span><span class="p">(</span><span class="n">AZURE_CONN_STR</span><span class="p">)</span>
+    <span class="n">container</span> <span class="o">=</span> <span class="n">blob_svc</span><span class="o">.</span><span class="n">get_container_client</span><span class="p">(</span><span class="n">BLOB_DESIGN_DOCS_CONTAINER</span><span class="p">)</span>
+    
+    <span class="c1"># Get all blobs, extract unique project folders</span>
+    <span class="n">all_blobs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">container</span><span class="o">.</span><span class="n">list_blobs</span><span class="p">())</span>
+    <span class="n">projects_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">all_blobs</span><span class="p">:</span>
+        <span class="c1"># blob.name is like &quot;ProjectName/Order_A.docx&quot;</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">project_name</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">file_name</span>    <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            
+            <span class="k">if</span> <span class="n">project_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">projects_dict</span><span class="p">:</span>
+                <span class="n">projects_dict</span><span class="p">[</span><span class="n">project_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">project_name</span><span class="p">,</span>
+                    <span class="s2">&quot;files&quot;</span><span class="p">:</span> <span class="p">[],</span>
+                    <span class="s2">&quot;order_a&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">&quot;order_b&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">&quot;last_updated&quot;</span><span class="p">:</span> <span class="n">blob</span><span class="o">.</span><span class="n">last_modified</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">blob</span><span class="o">.</span><span class="n">last_modified</span> <span class="k">else</span> <span class="kc">None</span>
+                <span class="p">}</span>
+            
+            <span class="n">projects_dict</span><span class="p">[</span><span class="n">project_name</span><span class="p">][</span><span class="s2">&quot;files&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="s2">&quot;order_a&quot;</span> <span class="ow">in</span> <span class="n">file_name</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                <span class="n">projects_dict</span><span class="p">[</span><span class="n">project_name</span><span class="p">][</span><span class="s2">&quot;order_a&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="s2">&quot;order_b&quot;</span> <span class="ow">in</span> <span class="n">file_name</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+                <span class="n">projects_dict</span><span class="p">[</span><span class="n">project_name</span><span class="p">][</span><span class="s2">&quot;order_b&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;projects&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">projects_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())}</span>
+
+<span class="c1">#Get detailed info for a specific project.</span>
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/api/projects/</span><span class="si">{project_name}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_project_details</span><span class="p">(</span><span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+   
+    <span class="kn">from</span><span class="w"> </span><span class="nn">azure.storage.blob</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlobServiceClient</span>
+    
+    <span class="n">blob_svc</span>  <span class="o">=</span> <span class="n">BlobServiceClient</span><span class="o">.</span><span class="n">from_connection_string</span><span class="p">(</span><span class="n">AZURE_CONN_STR</span><span class="p">)</span>
+    <span class="n">container</span> <span class="o">=</span> <span class="n">blob_svc</span><span class="o">.</span><span class="n">get_container_client</span><span class="p">(</span><span class="n">BLOB_DESIGN_DOCS_CONTAINER</span><span class="p">)</span>
+    
+    <span class="n">prefix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">/&quot;</span>
+    <span class="n">blobs</span>  <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">container</span><span class="o">.</span><span class="n">list_blobs</span><span class="p">(</span><span class="n">name_starts_with</span><span class="o">=</span><span class="n">prefix</span><span class="p">))</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">blobs</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Project &#39;</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&#39; not found.&quot;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">project_name</span><span class="p">,</span>
+        <span class="s2">&quot;files&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blobs</span><span class="p">],</span>
+        <span class="s2">&quot;last_updated&quot;</span><span class="p">:</span> <span class="n">blobs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">last_modified</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="n">blobs</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="p">}</span>
+
+<span class="c1">#Create a new project and kick off the full pipeline.</span>
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/api/projects/create&quot;</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">create_new_project</span><span class="p">(</span>
+    <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Form</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+    <span class="n">files</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">UploadFile</span><span class="p">]</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+    <span class="n">background_tasks</span><span class="p">:</span> <span class="n">BackgroundTasks</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Files are temporarily uploaded, then pushed to Azure Blob.</span>
+<span class="sd">    Pipeline is triggered in background.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Validate inputs</span>
+    <span class="n">project_name</span> <span class="o">=</span> <span class="n">project_name</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">project_name</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Project name cannot be empty.&quot;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">files</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;At least one file is required.&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># Validate file extensions</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">validate_file</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="n">error</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">size</span> <span class="ow">and</span> <span class="n">file</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="n">MAX_FILE_SIZE_B</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;File &#39;</span><span class="si">{</span><span class="n">file</span><span class="o">.</span><span class="n">filename</span><span class="si">}</span><span class="s2">&#39; exceeds max size (</span><span class="si">{</span><span class="n">MAX_FILE_SIZE_MB</span><span class="si">}</span><span class="s2">MB).&quot;</span>
+            <span class="p">)</span>
+    
+    <span class="c1"># Create temp folder for this project</span>
+    <span class="n">temp_project_dir</span> <span class="o">=</span> <span class="n">TEMP_DIR</span> <span class="o">/</span> <span class="n">sanitize_name</span><span class="p">(</span><span class="n">project_name</span><span class="p">)</span>
+    <span class="n">temp_project_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Save files to temp location</span>
+        <span class="n">saved_files</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+            <span class="n">local_path</span> <span class="o">=</span> <span class="n">temp_project_dir</span> <span class="o">/</span> <span class="n">file</span><span class="o">.</span><span class="n">filename</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">local_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">content</span> <span class="o">=</span> <span class="k">await</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+            <span class="n">saved_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">local_path</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[TEMP] Saved: </span><span class="si">{</span><span class="n">local_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Upload files to Azure Blob input container</span>
+        <span class="n">blob_folder</span> <span class="o">=</span> <span class="n">make_blob_folder</span><span class="p">(</span><span class="n">project_name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">local_path</span> <span class="ow">in</span> <span class="n">saved_files</span><span class="p">:</span>
+            <span class="n">blob_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">blob_folder</span><span class="si">}{</span><span class="n">local_path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">upload_file_to_blob</span><span class="p">(</span><span class="n">local_path</span><span class="p">,</span> <span class="n">blob_path</span><span class="p">)</span>
+        
+        <span class="c1"># Kick off background pipeline</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[PROJECT] Created: </span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">background_tasks</span><span class="p">:</span>
+            <span class="n">background_tasks</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">run_pipeline</span><span class="p">,</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">blob_folder</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;Project created and pipeline started&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;project_name&quot;</span><span class="p">:</span> <span class="n">project_name</span><span class="p">,</span>
+            <span class="s2">&quot;files_uploaded&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">saved_files</span><span class="p">),</span>
+            <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Files are being processed. Check back in a few minutes for Order A/B.&quot;</span>
+        <span class="p">}</span>
+    
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="c1"># Clean up temp files</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">temp_project_dir</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1">#Regenerate Order A and B for an existing project.</span>
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/api/projects/</span><span class="si">{project_name}</span><span class="s2">/regenerate&quot;</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">regenerate_orders</span><span class="p">(</span><span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">background_tasks</span><span class="p">:</span> <span class="n">BackgroundTasks</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">background_tasks</span><span class="p">:</span>
+        <span class="n">background_tasks</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">trigger_order_generation</span><span class="p">,</span> <span class="n">project_name</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;Order regeneration started&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;project_name&quot;</span><span class="p">:</span> <span class="n">project_name</span><span class="p">,</span>
+        <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Orders are being generated. Please wait 1–3 minutes and check back.&quot;</span>
+    <span class="p">}</span>
+
+<span class="c1">#Download an order document from Azure Blob.</span>
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/api/orders/download&quot;</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">download_order</span><span class="p">(</span><span class="n">blob</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">azure.storage.blob</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlobServiceClient</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">Response</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">blob_svc</span>  <span class="o">=</span> <span class="n">BlobServiceClient</span><span class="o">.</span><span class="n">from_connection_string</span><span class="p">(</span><span class="n">AZURE_CONN_STR</span><span class="p">)</span>
+        <span class="n">container</span> <span class="o">=</span> <span class="n">blob_svc</span><span class="o">.</span><span class="n">get_container_client</span><span class="p">(</span><span class="n">BLOB_DESIGN_DOCS_CONTAINER</span><span class="p">)</span>
+        
+        <span class="c1"># Download blob</span>
+        <span class="n">download_stream</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">download_blob</span><span class="p">(</span><span class="n">blob</span><span class="p">)</span>
+        <span class="n">blob_data</span> <span class="o">=</span> <span class="n">download_stream</span><span class="o">.</span><span class="n">readall</span><span class="p">()</span>
+        
+        <span class="c1"># Return the actual file, not JSON</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span>
+            <span class="n">content</span><span class="o">=</span><span class="n">blob_data</span><span class="p">,</span>
+            <span class="n">media_type</span><span class="o">=</span><span class="s2">&quot;application/vnd.openxmlformats-officedocument.wordprocessingml.document&quot;</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Content-Disposition&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;attachment; filename=</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">}</span>
+        <span class="p">)</span>
+    
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; Error: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span>
+            <span class="n">status_code</span><span class="o">=</span><span class="mi">404</span><span class="p">,</span> 
+            <span class="n">detail</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Blob not found or error: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+<span class="c1">#Simple test endpoint to verify backend is working</span>
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/api/test-hello&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_hello</span><span class="p">():</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">===== TEST ENDPOINT CALLED =====&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;Backend is working!&quot;</span><span class="p">,</span> <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;If you see this, the backend is responsive&quot;</span><span class="p">}</span>
+
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/api/chat&quot;</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">chat</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">ChatRequest</span><span class="p">,</span> <span class="n">background_tasks</span><span class="p">:</span> <span class="n">BackgroundTasks</span><span class="p">):</span>
+    <span class="n">msg</span>          <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">message</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">msg_lower</span>    <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">project_name</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">project_name</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">msg</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">HTTPException</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="s2">&quot;Message cannot be empty.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Resolve project name — from request body or parsed from message text</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">project_name</span><span class="p">:</span>
+        <span class="n">project_name</span> <span class="o">=</span> <span class="n">extract_project_from_message</span><span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">project_name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;reply&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s2">&quot;Please specify the project name in your message.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="s2">&quot;Examples:</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="s2">&quot;  • </span><span class="se">\&quot;</span><span class="s2">Energinet_VSR — what is the rated voltage?</span><span class="se">\&quot;\n</span><span class="s2">&quot;</span>
+                    <span class="s2">&quot;  • </span><span class="se">\&quot;</span><span class="s2">Order A for TenneT_650MVA</span><span class="se">\&quot;</span><span class="s2">&quot;</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;ask_project&quot;</span>
+            <span class="p">}</span>
+
+    <span class="c1"># Detect order type and transformer filter</span>
+    <span class="n">order_type</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="s2">&quot;order a&quot;</span> <span class="ow">in</span> <span class="n">msg_lower</span><span class="p">:</span>
+        <span class="n">order_type</span> <span class="o">=</span> <span class="s2">&quot;A&quot;</span>
+    <span class="k">elif</span> <span class="s2">&quot;order b&quot;</span> <span class="ow">in</span> <span class="n">msg_lower</span><span class="p">:</span>
+        <span class="n">order_type</span> <span class="o">=</span> <span class="s2">&quot;B&quot;</span>
+
+    <span class="n">transformer_filter</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="s2">&quot;onshore&quot;</span> <span class="ow">in</span> <span class="n">msg_lower</span> <span class="ow">and</span> <span class="s2">&quot;offshore&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">msg_lower</span><span class="p">:</span>
+        <span class="n">transformer_filter</span> <span class="o">=</span> <span class="s2">&quot;onshore&quot;</span>
+    <span class="k">elif</span> <span class="s2">&quot;offshore&quot;</span> <span class="ow">in</span> <span class="n">msg_lower</span> <span class="ow">and</span> <span class="s2">&quot;onshore&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">msg_lower</span><span class="p">:</span>
+        <span class="n">transformer_filter</span> <span class="o">=</span> <span class="s2">&quot;offshore&quot;</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[CHAT] project=&#39;</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&#39; | order=</span><span class="si">{</span><span class="n">order_type</span><span class="si">}</span><span class="s2"> | filter=</span><span class="si">{</span><span class="n">transformer_filter</span><span class="si">}</span><span class="s2"> | msg=&#39;</span><span class="si">{</span><span class="n">msg</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># ── Order request ─────────────────────────────────────────────────────────</span>
+    <span class="k">if</span> <span class="n">order_type</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">find_order_in_blob</span><span class="p">(</span><span class="n">order_type</span><span class="p">,</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">transformer_filter</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;found&quot;</span><span class="p">]:</span>
+            <span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">quote</span>
+            <span class="n">encoded_blob</span> <span class="o">=</span> <span class="n">quote</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;blob_name&#39;</span><span class="p">],</span> <span class="n">safe</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;reply&quot;</span><span class="p">:</span>        <span class="sa">f</span><span class="s2">&quot;Order </span><span class="si">{</span><span class="n">order_type</span><span class="si">}</span><span class="s2"> for &#39;</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&#39; is ready.&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;action&quot;</span><span class="p">:</span>       <span class="s2">&quot;download&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;download_url&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;/api/orders/download?blob=</span><span class="si">{</span><span class="n">encoded_blob</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;filename&quot;</span><span class="p">:</span>     <span class="n">result</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span>
+            <span class="p">}</span>
+
+        <span class="c1"># If not generated yet → trigger generation in background and inform user</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;reason&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;not_generated&quot;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[CHAT] Order </span><span class="si">{</span><span class="n">order_type</span><span class="si">}</span><span class="s2"> not found — triggering on-demand generation&quot;</span><span class="p">)</span>
+            <span class="n">background_tasks</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="n">trigger_order_generation</span><span class="p">,</span> <span class="n">project_name</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;reply&quot;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Order </span><span class="si">{</span><span class="n">order_type</span><span class="si">}</span><span class="s2"> for &#39;</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&#39; is being generated now.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;This usually takes 1–3 minutes. Please ask again shortly.&quot;</span>
+                <span class="p">),</span>
+                <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;generating&quot;</span>
+            <span class="p">}</span>
+
+        <span class="c1"># No project at all, or ambiguous match</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;reply&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;message&quot;</span><span class="p">],</span> <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;answer&quot;</span><span class="p">}</span>
+
+    <span class="c1"># ── General question → Azure AI Search + OpenAI ─────────────────────────────────</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[DEBUG] About to call answer_general_question...&quot;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">answer_general_question</span><span class="p">(</span><span class="n">req</span><span class="o">.</span><span class="n">message</span><span class="p">,</span> <span class="n">project_name</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[DEBUG] answer_general_question returned: </span><span class="si">{</span><span class="n">result</span><span class="p">[:</span><span class="mi">100</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;reply&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">,</span> <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="s2">&quot;answer&quot;</span><span class="p">}</span>
+
+
+<span class="c1"># DIAGNOSTIC ENDPOINTS (for troubleshooting)</span>
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/api/test-blob&quot;</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">test_blob_connection</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test Azure Blob connectivity and list available blobs.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">azure.storage.blob</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlobServiceClient</span>
+        
+        <span class="n">blob_svc</span> <span class="o">=</span> <span class="n">BlobServiceClient</span><span class="o">.</span><span class="n">from_connection_string</span><span class="p">(</span><span class="n">AZURE_CONN_STR</span><span class="p">)</span>
+        <span class="n">container</span> <span class="o">=</span> <span class="n">blob_svc</span><span class="o">.</span><span class="n">get_container_client</span><span class="p">(</span><span class="n">BLOB_DESIGN_DOCS_CONTAINER</span><span class="p">)</span>
+        
+        <span class="c1"># Get container properties</span>
+        <span class="n">props</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">get_container_properties</span><span class="p">()</span>
+        
+        <span class="c1"># List first 10 blobs</span>
+        <span class="n">blobs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">container</span><span class="o">.</span><span class="n">list_blobs</span><span class="p">())[:</span><span class="mi">10</span><span class="p">]</span>
+        <span class="n">blob_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blobs</span><span class="p">]</span>
+        
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot; Connected to Azure Blob Storage&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;container&quot;</span><span class="p">:</span> <span class="n">BLOB_DESIGN_DOCS_CONTAINER</span><span class="p">,</span>
+            <span class="s2">&quot;total_blobs_in_container&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">container</span><span class="o">.</span><span class="n">list_blobs</span><span class="p">())),</span>
+            <span class="s2">&quot;sample_blobs&quot;</span><span class="p">:</span> <span class="n">blob_names</span><span class="p">,</span>
+            <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Connection successful. Blobs are reachable.&quot;</span>
+        <span class="p">}</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot; Failed to connect&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
+            <span class="s2">&quot;container&quot;</span><span class="p">:</span> <span class="n">BLOB_DESIGN_DOCS_CONTAINER</span><span class="p">,</span>
+        <span class="p">}</span>
+
+<span class="c1">#Diagnostic endpoint to check backend configuration.</span>
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/api/diagnose&quot;</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">diagnose</span><span class="p">():</span>
+  
+    <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+    
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;Backend Configuration Check&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;API_KEY_SET&quot;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;API_KEY&quot;</span><span class="p">)),</span>
+        <span class="s2">&quot;API_KEY_VALUE&quot;</span><span class="p">:</span> <span class="s2">&quot;***&quot;</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;API_KEY&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;NOT SET&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;AZURE_STORAGE_SET&quot;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;AZURE_STORAGE_CONNECTION_STRING&quot;</span><span class="p">)),</span>
+        <span class="s2">&quot;AZURE_SEARCH_SET&quot;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;AZURE_SEARCH_ENDPOINT&quot;</span><span class="p">)),</span>
+        <span class="s2">&quot;OPENAI_SET&quot;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;OPENAI_KEY&quot;</span><span class="p">)),</span>
+        <span class="s2">&quot;BLOB_INPUT_CONTAINER&quot;</span><span class="p">:</span> <span class="n">BLOB_INPUT_CONTAINER</span><span class="p">,</span>
+        <span class="s2">&quot;BLOB_OUTPUT_CONTAINER&quot;</span><span class="p">:</span> <span class="n">BLOB_OUTPUT_CONTAINER</span><span class="p">,</span>
+        <span class="s2">&quot;BLOB_DESIGN_DOCS_CONTAINER&quot;</span><span class="p">:</span> <span class="n">BLOB_DESIGN_DOCS_CONTAINER</span><span class="p">,</span>
+        <span class="s2">&quot;AZURE_SEARCH_INDEX&quot;</span><span class="p">:</span> <span class="n">AZURE_SEARCH_INDEX</span><span class="p">,</span>
+        <span class="s2">&quot;CHAT_MODEL&quot;</span><span class="p">:</span> <span class="n">CHAT_MODEL</span><span class="p">,</span>
+        <span class="s2">&quot;TEMP_DIR&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">TEMP_DIR</span><span class="p">),</span>
+        <span class="s2">&quot;TEMP_DIR_EXISTS&quot;</span><span class="p">:</span> <span class="n">TEMP_DIR</span><span class="o">.</span><span class="n">exists</span><span class="p">(),</span>
+        <span class="s2">&quot;CORS_ENABLED&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="s2">&quot;CORS_ALLOWED_ORIGINS&quot;</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">&quot;http://localhost:8000&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;http://127.0.0.1:8000&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;http://localhost:3000&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;http://127.0.0.1:3000&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;http://localhost:5173&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;http://127.0.0.1:5173&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;http://localhost:8080&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;http://127.0.0.1:8080&quot;</span><span class="p">,</span>
+        <span class="p">],</span>
+        <span class="s2">&quot;EXPOSE_HEADERS&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Content-Disposition&quot;</span><span class="p">,</span> <span class="s2">&quot;Content-Type&quot;</span><span class="p">,</span> <span class="s2">&quot;Content-Length&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="s2">&quot;Check these settings if downloads are not working&quot;</span>
+    <span class="p">}</span>
+
+<span class="c1">#</span>
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/api/projects/</span><span class="si">{project_name}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_project</span><span class="p">(</span><span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get project info including available orders — always returns 200.&quot;&quot;&quot;</span>
+    <span class="n">safe_name</span> <span class="o">=</span> <span class="n">sanitize_name</span><span class="p">(</span><span class="n">project_name</span><span class="p">)</span>
+    
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">azure.storage.blob</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlobServiceClient</span>
+        <span class="n">blob_svc</span> <span class="o">=</span> <span class="n">BlobServiceClient</span><span class="o">.</span><span class="n">from_connection_string</span><span class="p">(</span><span class="n">AZURE_CONN_STR</span><span class="p">)</span>
+        <span class="n">container</span> <span class="o">=</span> <span class="n">blob_svc</span><span class="o">.</span><span class="n">get_container_client</span><span class="p">(</span><span class="n">BLOB_DESIGN_DOCS_CONTAINER</span><span class="p">)</span>
+        
+        <span class="n">prefix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">safe_name</span><span class="si">}</span><span class="s2">/&quot;</span>
+        <span class="n">blobs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">container</span><span class="o">.</span><span class="n">list_blobs</span><span class="p">(</span><span class="n">name_starts_with</span><span class="o">=</span><span class="n">prefix</span><span class="p">))</span>
+        
+        <span class="n">orders</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;order_a&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;order_b&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs</span><span class="p">:</span>
+            
+            <span class="n">blob_lower</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            
+            <span class="k">if</span> <span class="s2">&quot;order_a&quot;</span> <span class="ow">in</span> <span class="n">blob_lower</span> <span class="ow">or</span> <span class="s2">&quot;order a&quot;</span> <span class="ow">in</span> <span class="n">blob_lower</span><span class="p">:</span>
+                <span class="n">orders</span><span class="p">[</span><span class="s2">&quot;order_a&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">elif</span> <span class="s2">&quot;order_b&quot;</span> <span class="ow">in</span> <span class="n">blob_lower</span> <span class="ow">or</span> <span class="s2">&quot;order b&quot;</span> <span class="ow">in</span> <span class="n">blob_lower</span><span class="p">:</span>
+                <span class="n">orders</span><span class="p">[</span><span class="s2">&quot;order_b&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">name</span>
+        
+        <span class="n">has_orders</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">orders</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">project_name</span><span class="p">,</span>
+            <span class="s2">&quot;safe_name&quot;</span><span class="p">:</span> <span class="n">safe_name</span><span class="p">,</span>
+            <span class="s2">&quot;orders&quot;</span><span class="p">:</span> <span class="n">orders</span><span class="p">,</span>
+            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;ready&quot;</span> <span class="k">if</span> <span class="n">has_orders</span> <span class="k">else</span> <span class="s2">&quot;processing&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;orders_ready&quot;</span><span class="p">:</span> <span class="n">has_orders</span><span class="p">,</span>
+            <span class="s2">&quot;available_blobs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blobs</span><span class="p">],</span>
+            <span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="s2">&quot;last_updated&quot;</span><span class="p">:</span> <span class="nb">max</span><span class="p">((</span><span class="n">b</span><span class="o">.</span><span class="n">creation_time</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blobs</span><span class="p">),</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="p">}</span>
+    
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error getting project </span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># Still return 200 — don&#39;t let frontend crash</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">project_name</span><span class="p">,</span>
+            <span class="s2">&quot;safe_name&quot;</span><span class="p">:</span> <span class="n">safe_name</span><span class="p">,</span>
+            <span class="s2">&quot;orders&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;order_a&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;order_b&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
+            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="s2">&quot;processing&quot;</span><span class="p">,</span>  <span class="c1"># assume it&#39;s still starting</span>
+            <span class="s2">&quot;orders_ready&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;available_blobs&quot;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s2">&quot;exists&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="s2">&quot;error&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;Unknown error&quot;</span>
+        <span class="p">}</span>
+<span class="c1"># RUN- entry point</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">uvicorn</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">60</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  Transformer Spec RAG  —  Local Dev Mode&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;  http://localhost:8000&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  API Key: </span><span class="si">{</span><span class="s1">&#39;ON&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">API_KEY</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;⚠️  OFF  (set API_KEY in .env)&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="o">*</span><span class="mi">60</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">uvicorn</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;app:app&quot;</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">8000</span><span class="p">,</span> <span class="n">reload</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Your Team.
+      <span class="lastupdated">Last updated on Mar 11, 2026.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>doc_extraction_using_di &mdash; Transformer Spec RAG 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=8d563738"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Transformer Spec RAG
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Architecture &amp; Design</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">UI-RAG</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Support</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Transformer Spec RAG</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">doc_extraction_using_di</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for doc_extraction_using_di</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Transformer Document Processor:</span>
+<span class="sd">- Reads files from:   input-document-center/{project_folder}/</span>
+<span class="sd">- Writes results to:  output-of-di/{project_folder}/</span>
+<span class="sd">- Skips project if output already exists in output-of-di</span>
+
+<span class="sd">Project folder name comes from the UI:</span>
+<span class="sd">    standalone → ProjectName_onshore/   or  ProjectName_offshore/</span>
+<span class="sd">    combined   → ProjectName_onshore_offshore/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dotenv</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dotenv</span>
+<span class="n">load_dotenv</span><span class="p">()</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">azure.ai.formrecognizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">DocumentAnalysisClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">azure.core.credentials</span><span class="w"> </span><span class="kn">import</span> <span class="n">AzureKeyCredential</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">azure.storage.blob</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlobServiceClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pdf2image</span><span class="w"> </span><span class="kn">import</span> <span class="n">convert_from_path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">PyPDF2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1">#Config — from .env </span>
+<span class="n">AZURE_DI_ENDPOINT</span>   <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;AZURE_DI_ENDPOINT&quot;</span><span class="p">,</span>   <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">AZURE_DI_API_KEY</span>    <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;AZURE_DI_API_KEY&quot;</span><span class="p">,</span>    <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">AZURE_CONN_STR</span>      <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;AZURE_STORAGE_CONNECTION_STRING&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">INPUT_CONTAINER</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;BLOB_INPUT_CONTAINER&quot;</span><span class="p">,</span>  <span class="s2">&quot;input-document-center&quot;</span><span class="p">)</span>
+<span class="n">OUTPUT_CONTAINER</span>    <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;BLOB_OUTPUT_CONTAINER&quot;</span><span class="p">,</span> <span class="s2">&quot;output-of-di&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TransformerDocumentProcessor">
+<a class="viewcode-back" href="../doc_extraction_using_di.html#doc_extraction_using_di.TransformerDocumentProcessor">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TransformerDocumentProcessor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Process all files from a project folder in Azure Blob Storage.</span>
+
+<span class="sd">    Flow:</span>
+<span class="sd">        input-document-center/ProjectName_onshore_offshore/file.pdf</span>
+<span class="sd">                    ↓  download to temp</span>
+<span class="sd">                    ↓  run Azure DI</span>
+<span class="sd">                    ↓  upload result JSON</span>
+<span class="sd">        output-of-di/ProjectName_onshore_offshore/file_di_result.json</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TransformerDocumentProcessor.__init__">
+<a class="viewcode-back" href="../doc_extraction_using_di.html#doc_extraction_using_di.TransformerDocumentProcessor.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#Azure DI client</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">di_client</span> <span class="o">=</span> <span class="n">DocumentAnalysisClient</span><span class="p">(</span>
+            <span class="n">endpoint</span>   <span class="o">=</span> <span class="n">AZURE_DI_ENDPOINT</span><span class="p">,</span>
+            <span class="n">credential</span> <span class="o">=</span> <span class="n">AzureKeyCredential</span><span class="p">(</span><span class="n">AZURE_DI_API_KEY</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1">#Azure Blob client</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blob_client</span>      <span class="o">=</span> <span class="n">BlobServiceClient</span><span class="o">.</span><span class="n">from_connection_string</span><span class="p">(</span><span class="n">AZURE_CONN_STR</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_container</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blob_client</span><span class="o">.</span><span class="n">get_container_client</span><span class="p">(</span><span class="n">INPUT_CONTAINER</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_container</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blob_client</span><span class="o">.</span><span class="n">get_container_client</span><span class="p">(</span><span class="n">OUTPUT_CONTAINER</span><span class="p">)</span>
+
+        <span class="c1">#Duplicate tracking (within a single run)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">duplicate_tracker</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processing_log</span>    <span class="o">=</span> <span class="p">[]</span></div>
+
+
+    <span class="c1"># SKIP CHECK  —  has this project already been processed?</span>
+<div class="viewcode-block" id="TransformerDocumentProcessor.project_already_processed">
+<a class="viewcode-back" href="../doc_extraction_using_di.html#doc_extraction_using_di.TransformerDocumentProcessor.project_already_processed">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">project_already_processed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if output-of-di already has results for this project folder.</span>
+<span class="sd">        If any result JSON exists under that folder → skip the whole project.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            project_folder: e.g. &quot;Energinet_onshore_offshore&quot;</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            True if already processed, False if needs processing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">prefix</span>   <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">project_folder</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">/&quot;</span>
+        <span class="n">existing</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_container</span><span class="o">.</span><span class="n">list_blobs</span><span class="p">(</span><span class="n">name_starts_with</span><span class="o">=</span><span class="n">prefix</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">existing</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Project &#39;</span><span class="si">{</span><span class="n">project_folder</span><span class="si">}</span><span class="s2">&#39; already processed &quot;</span>
+                  <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span><span class="si">}</span><span class="s2"> output files found in &#39;</span><span class="si">{</span><span class="n">OUTPUT_CONTAINER</span><span class="si">}</span><span class="s2">&#39;). Skipping.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+    <span class="c1">#LIST INPUT FILES FROM BLOB</span>
+<div class="viewcode-block" id="TransformerDocumentProcessor.list_project_files">
+<a class="viewcode-back" href="../doc_extraction_using_di.html#doc_extraction_using_di.TransformerDocumentProcessor.list_project_files">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">list_project_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        List all PDF/DOCX/XLSX files in the project folder in input-document-center.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            project_folder: e.g. &quot;Energinet_onshore_offshore&quot;</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            List of file info dicts</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">project_folder</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">/&quot;</span>
+        <span class="n">blobs</span>  <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_container</span><span class="o">.</span><span class="n">list_blobs</span><span class="p">(</span><span class="n">name_starts_with</span><span class="o">=</span><span class="n">prefix</span><span class="p">))</span>
+
+        <span class="n">allowed</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;.pdf&quot;</span><span class="p">,</span> <span class="s2">&quot;.docx&quot;</span><span class="p">,</span> <span class="s2">&quot;.xlsx&quot;</span><span class="p">}</span>
+        <span class="n">files</span>   <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="n">blobs</span><span class="p">:</span>
+            <span class="n">ext</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">ext</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">allowed</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">files</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s1">&#39;project_name&#39;</span><span class="p">:</span>  <span class="n">project_folder</span><span class="p">,</span>
+                <span class="s1">&#39;blob_name&#39;</span><span class="p">:</span>     <span class="n">blob</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>               <span class="c1"># full path in blob e.g. &quot;Energinet_onshore/spec.pdf&quot;</span>
+                <span class="s1">&#39;filename&#39;</span><span class="p">:</span>      <span class="n">Path</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>    <span class="c1"># just &quot;spec.pdf&quot;</span>
+                <span class="s1">&#39;file_size&#39;</span><span class="p">:</span>     <span class="n">blob</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+                <span class="s1">&#39;ext&#39;</span><span class="p">:</span>           <span class="n">ext</span>
+            <span class="p">})</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span><span class="si">}</span><span class="s2"> files in &#39;</span><span class="si">{</span><span class="n">INPUT_CONTAINER</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">prefix</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">files</span></div>
+
+
+    <span class="c1">#Downlosd the files from blob to temp</span>
+<div class="viewcode-block" id="TransformerDocumentProcessor.download_to_temp">
+<a class="viewcode-back" href="../doc_extraction_using_di.html#doc_extraction_using_di.TransformerDocumentProcessor.download_to_temp">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">download_to_temp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blob_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">temp_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Download a blob file to a local temp folder for processing.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Local path of downloaded file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">local_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">temp_dir</span><span class="p">)</span> <span class="o">/</span> <span class="n">Path</span><span class="p">(</span><span class="n">blob_name</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">blob</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_container</span><span class="o">.</span><span class="n">get_blob_client</span><span class="p">(</span><span class="n">blob_name</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">local_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">stream</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">download_blob</span><span class="p">()</span>
+            <span class="n">stream</span><span class="o">.</span><span class="n">readinto</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">local_path</span><span class="p">)</span></div>
+
+
+    <span class="c1">#Upload results to output blob</span>
+<div class="viewcode-block" id="TransformerDocumentProcessor.upload_result_to_blob">
+<a class="viewcode-back" href="../doc_extraction_using_di.html#doc_extraction_using_di.TransformerDocumentProcessor.upload_result_to_blob">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">upload_result_to_blob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">project_folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Upload a DI result JSON to output-of-di/{project_folder}/filename.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            local_path:     Local path of the result JSON</span>
+<span class="sd">            project_folder: e.g. &quot;Energinet_onshore_offshore&quot;</span>
+<span class="sd">            filename:       e.g. &quot;spec_di_result.json&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">blob_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">project_folder</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">local_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_container</span><span class="o">.</span><span class="n">upload_blob</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">blob_path</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">f</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Uploaded: </span><span class="si">{</span><span class="n">OUTPUT_CONTAINER</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">blob_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+    <span class="c1"># DUPLICATE CHECK (within a run)</span>
+<div class="viewcode-block" id="TransformerDocumentProcessor.calculate_hash">
+<a class="viewcode-back" href="../doc_extraction_using_di.html#doc_extraction_using_di.TransformerDocumentProcessor.calculate_hash">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">calculate_hash</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">()</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4096</span><span class="p">),</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+                <span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TransformerDocumentProcessor.is_duplicate">
+<a class="viewcode-back" href="../doc_extraction_using_di.html#doc_extraction_using_di.TransformerDocumentProcessor.is_duplicate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_duplicate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="n">file_hash</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_hash</span><span class="p">(</span><span class="n">local_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">file_hash</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">duplicate_tracker</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">duplicate_tracker</span><span class="p">[</span><span class="n">file_hash</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">duplicate_tracker</span><span class="p">[</span><span class="n">file_hash</span><span class="p">]</span> <span class="o">=</span> <span class="n">local_path</span>
+        <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;&quot;</span></div>
+
+
+    <span class="c1"># IMAGE PAGE DETECTION</span>
+<div class="viewcode-block" id="TransformerDocumentProcessor.detect_image_pages">
+<a class="viewcode-back" href="../doc_extraction_using_di.html#doc_extraction_using_di.TransformerDocumentProcessor.detect_image_pages">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">detect_image_pages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pdf_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+        <span class="n">image_pages</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">images</span> <span class="o">=</span> <span class="n">convert_from_path</span><span class="p">(</span><span class="n">pdf_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">72</span><span class="p">)</span>
+
+            <span class="c1"># Open PdfReader ONCE outside the loop — not per page</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">pdf_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">reader</span> <span class="o">=</span> <span class="n">PyPDF2</span><span class="o">.</span><span class="n">PdfReader</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                    <span class="n">pdf_pages</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">pages</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="n">pdf_pages</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">for</span> <span class="n">page_num</span><span class="p">,</span> <span class="n">img</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">img_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s1">&#39;L&#39;</span><span class="p">))</span>
+                <span class="n">variance</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">img_array</span><span class="p">)</span>
+
+                <span class="c1"># High variance = image-heavy page (lots of pixel variation from image content)</span>
+                <span class="c1"># Low variance  = blank or near-blank page</span>
+                <span class="k">if</span> <span class="n">variance</span> <span class="o">&gt;</span> <span class="mi">1000</span><span class="p">:</span>
+                    <span class="n">image_pages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">page_num</span><span class="p">)</span>
+
+                <span class="c1"># Also flag pages with very little extractable text as image pages</span>
+                <span class="k">if</span> <span class="n">pdf_pages</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">text</span> <span class="o">=</span> <span class="n">pdf_pages</span><span class="p">[</span><span class="n">page_num</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">extract_text</span><span class="p">()</span> <span class="ow">or</span> <span class="s2">&quot;&quot;</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">&lt;</span> <span class="mi">50</span> <span class="ow">and</span> <span class="n">page_num</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">image_pages</span><span class="p">:</span>
+                            <span class="n">image_pages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">page_num</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                        <span class="k">pass</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Image detection failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image_pages</span></div>
+
+
+    <span class="c1"># DI processing</span>
+<div class="viewcode-block" id="TransformerDocumentProcessor.process_with_di">
+<a class="viewcode-back" href="../doc_extraction_using_di.html#doc_extraction_using_di.TransformerDocumentProcessor.process_with_di">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_with_di</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">file_info</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span>
+                        <span class="n">temp_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run Azure Document Intelligence on a local file.</span>
+<span class="sd">        Saves result JSON locally, then uploads to output-of-di blob.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            result dict with success flag and output blob path</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;success&#39;</span><span class="p">:</span>          <span class="kc">False</span><span class="p">,</span>
+            <span class="s1">&#39;di_result_path&#39;</span><span class="p">:</span>   <span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;output_blob_path&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;pages_processed&#39;</span><span class="p">:</span>  <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;tables_found&#39;</span><span class="p">:</span>     <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;error&#39;</span><span class="p">:</span>            <span class="kc">None</span>
+        <span class="p">}</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Running Azure DI on: </span><span class="si">{</span><span class="n">file_info</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">local_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">poller</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">di_client</span><span class="o">.</span><span class="n">begin_analyze_document</span><span class="p">(</span><span class="s2">&quot;prebuilt-layout&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+                <span class="n">di_result</span> <span class="o">=</span> <span class="n">poller</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+
+            <span class="c1"># Save result JSON to temp folder</span>
+            <span class="n">result_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">file_info</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">stem</span><span class="si">}</span><span class="s2">_di_result.json&quot;</span>
+            <span class="n">result_local</span>    <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">temp_dir</span><span class="p">)</span> <span class="o">/</span> <span class="n">result_filename</span>
+
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">result_local</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">di_result</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+            <span class="c1"># Upload to output-of-di blob</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upload_result_to_blob</span><span class="p">(</span>
+                <span class="n">local_path</span>     <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">result_local</span><span class="p">),</span>
+                <span class="n">project_folder</span> <span class="o">=</span> <span class="n">file_info</span><span class="p">[</span><span class="s1">&#39;project_name&#39;</span><span class="p">],</span>
+                <span class="n">filename</span>       <span class="o">=</span> <span class="n">result_filename</span>
+            <span class="p">)</span>
+
+            <span class="n">output_blob_path</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">file_info</span><span class="p">[</span><span class="s1">&#39;project_name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">result_filename</span><span class="si">}</span><span class="s2">&quot;</span>
+
+            <span class="n">result_data</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                <span class="s1">&#39;success&#39;</span><span class="p">:</span>          <span class="kc">True</span><span class="p">,</span>
+                <span class="s1">&#39;di_result_path&#39;</span><span class="p">:</span>   <span class="nb">str</span><span class="p">(</span><span class="n">result_local</span><span class="p">),</span>
+                <span class="s1">&#39;output_blob_path&#39;</span><span class="p">:</span> <span class="n">output_blob_path</span><span class="p">,</span>
+                <span class="s1">&#39;pages_processed&#39;</span><span class="p">:</span>  <span class="nb">len</span><span class="p">(</span><span class="n">di_result</span><span class="o">.</span><span class="n">pages</span><span class="p">),</span>
+                <span class="s1">&#39;tables_found&#39;</span><span class="p">:</span>     <span class="nb">len</span><span class="p">(</span><span class="n">di_result</span><span class="o">.</span><span class="n">tables</span><span class="p">)</span>
+            <span class="p">})</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DI complete — pages: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">di_result</span><span class="o">.</span><span class="n">pages</span><span class="p">)</span><span class="si">}</span><span class="s2">, &quot;</span>
+                  <span class="sa">f</span><span class="s2">&quot;tables: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">di_result</span><span class="o">.</span><span class="n">tables</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">result_data</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;       DI failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result_data</span></div>
+
+
+    <span class="c1"># PROCESS SINGLE FILE</span>
+<div class="viewcode-block" id="TransformerDocumentProcessor.process_single_file">
+<a class="viewcode-back" href="../doc_extraction_using_di.html#doc_extraction_using_di.TransformerDocumentProcessor.process_single_file">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_single_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_info</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">temp_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Full pipeline for one file:</span>
+<span class="sd">            Download from blob → duplicate check → DI → upload result</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> </span><span class="si">{</span><span class="n">file_info</span><span class="p">[</span><span class="s1">&#39;project_name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">file_info</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">summary</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;file_info&#39;</span><span class="p">:</span>   <span class="n">file_info</span><span class="p">,</span>
+            <span class="s1">&#39;timestamp&#39;</span><span class="p">:</span>   <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s1">&#39;duplicate&#39;</span><span class="p">:</span>   <span class="kc">False</span><span class="p">,</span>
+            <span class="s1">&#39;image_pages&#39;</span><span class="p">:</span> <span class="p">[],</span>
+            <span class="s1">&#39;di_result&#39;</span><span class="p">:</span>   <span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;status&#39;</span><span class="p">:</span>      <span class="s1">&#39;pending&#39;</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Download file to temp</span>
+        <span class="n">local_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">download_to_temp</span><span class="p">(</span><span class="n">file_info</span><span class="p">[</span><span class="s1">&#39;blob_name&#39;</span><span class="p">],</span> <span class="n">temp_dir</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Downloaded to temp&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Duplicate check</span>
+        <span class="n">is_dup</span><span class="p">,</span> <span class="n">original</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_duplicate</span><span class="p">(</span><span class="n">local_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_dup</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Duplicate of: </span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">original</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> — skipping&quot;</span><span class="p">)</span>
+            <span class="n">summary</span><span class="p">[</span><span class="s1">&#39;duplicate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">summary</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="s1">&#39;skipped_duplicate&#39;</span>
+            <span class="k">return</span> <span class="n">summary</span>
+
+        <span class="c1"># Image page detection (PDF only)</span>
+        <span class="k">if</span> <span class="n">file_info</span><span class="p">[</span><span class="s1">&#39;ext&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;.pdf&#39;</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Detecting image pages...&quot;</span><span class="p">)</span>
+            <span class="n">image_pages</span>          <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect_image_pages</span><span class="p">(</span><span class="n">local_path</span><span class="p">)</span>
+            <span class="n">summary</span><span class="p">[</span><span class="s1">&#39;image_pages&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image_pages</span>
+            <span class="k">if</span> <span class="n">image_pages</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Image-heavy pages: </span><span class="si">{</span><span class="n">image_pages</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Run DI</span>
+        <span class="n">di_result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_with_di</span><span class="p">(</span><span class="n">local_path</span><span class="p">,</span> <span class="n">file_info</span><span class="p">,</span> <span class="n">temp_dir</span><span class="p">)</span>
+        <span class="n">summary</span><span class="p">[</span><span class="s1">&#39;di_result&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">di_result</span>
+        <span class="n">summary</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span>    <span class="o">=</span> <span class="s1">&#39;success&#39;</span> <span class="k">if</span> <span class="n">di_result</span><span class="p">[</span><span class="s1">&#39;success&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="s1">&#39;failed&#39;</span>
+
+        <span class="k">return</span> <span class="n">summary</span></div>
+
+
+        <span class="c1">#Main entry to the code</span>
+<div class="viewcode-block" id="TransformerDocumentProcessor.process_project">
+<a class="viewcode-back" href="../doc_extraction_using_di.html#doc_extraction_using_di.TransformerDocumentProcessor.process_project">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Process all files for one project folder from Azure Blob.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            project_folder: Folder name in input-document-center blob,</span>
+<span class="sd">                            e.g. &quot;Energinet_onshore_offshore&quot;</span>
+<span class="sd">                            This comes directly from what the UI created.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PROCESSING PROJECT: </span><span class="si">{</span><span class="n">project_folder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input:  </span><span class="si">{</span><span class="n">INPUT_CONTAINER</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">project_folder</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output: </span><span class="si">{</span><span class="n">OUTPUT_CONTAINER</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">project_folder</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
+
+        <span class="c1">#Step 1: Skip if already processed</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_already_processed</span><span class="p">(</span><span class="n">project_folder</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="c1">#Step 2: List files in input blob</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_project_files</span><span class="p">(</span><span class="n">project_folder</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">files</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No processable files found in &#39;</span><span class="si">{</span><span class="n">project_folder</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="c1">#Step 3: Process each file in a temp directory</span>
+        <span class="n">results</span>    <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">temp_dir</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> Using temp dir: </span><span class="si">{</span><span class="n">temp_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">file_info</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">process_single_file</span><span class="p">(</span><span class="n">file_info</span><span class="p">,</span> <span class="n">temp_dir</span><span class="p">)</span>
+                <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">processing_log</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+        <span class="c1">#Step 4: Report </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_report</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">project_folder</span><span class="p">,</span> <span class="n">start_time</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">project_folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">start_time</span><span class="p">:</span> <span class="n">datetime</span><span class="p">):</span>
+        <span class="n">duration</span>   <span class="o">=</span> <span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
+        <span class="n">total</span>      <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+        <span class="n">successful</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;success&#39;</span><span class="p">)</span>
+        <span class="n">duplicates</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;duplicate&#39;</span><span class="p">])</span>
+        <span class="n">failed</span>     <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span> <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;failed&#39;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; DONE: </span><span class="si">{</span><span class="n">project_folder</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total files:   </span><span class="si">{</span><span class="n">total</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processed:     </span><span class="si">{</span><span class="n">successful</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Duplicates:    </span><span class="si">{</span><span class="n">duplicates</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed:        </span><span class="si">{</span><span class="n">failed</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Time:          </span><span class="si">{</span><span class="n">duration</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">s&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">   Results in:  </span><span class="si">{</span><span class="n">OUTPUT_CONTAINER</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">project_folder</span><span class="si">}</span><span class="s2">/&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">70</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Your Team.
+      <span class="lastupdated">Last updated on Mar 11, 2026.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

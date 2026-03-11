@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>doc_filling_blob &mdash; Transformer Spec RAG 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=8d563738"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Transformer Spec RAG
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Architecture &amp; Design</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">UI-RAG</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Support</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Transformer Spec RAG</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">doc_filling_blob</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for doc_filling_blob</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Transformer Document Processor:</span>
+<span class="sd">- Reads files from:   input-document-center/{project_folder}/</span>
+<span class="sd">- Writes results to:  output-of-di/{project_folder}/</span>
+<span class="sd">- Skips project if output already exists in output-of-di</span>
+
+<span class="sd">Project folder name comes from the UI:</span>
+<span class="sd">    standalone → ProjectName_onshore/   or  ProjectName_offshore/</span>
+<span class="sd">    combined   → ProjectName_onshore_offshore/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dotenv</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dotenv</span>
+<span class="n">load_dotenv</span><span class="p">()</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">azure.storage.blob</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlobServiceClient</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">docx</span><span class="w"> </span><span class="kn">import</span> <span class="n">Document</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR: pip install python-docx&quot;</span><span class="p">)</span>
+    <span class="k">raise</span>
+
+<span class="c1">#Azure config</span>
+<span class="n">AZURE_CONN_STR</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;AZURE_STORAGE_CONNECTION_STRING&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">TEMPLATE_CONTAINER</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;BLOB_TEMPLATE_CONTAINER&quot;</span><span class="p">,</span> <span class="s2">&quot;order-templates&quot;</span><span class="p">)</span>
+<span class="n">OUTPUT_CONTAINER</span>   <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;BLOB_DESIGN_DOCS_CONTAINER&quot;</span><span class="p">,</span> <span class="s2">&quot;order-design-documents&quot;</span><span class="p">)</span>
+
+<span class="n">TEMPLATE_NAMES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="s2">&quot;Order A.docx&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;B&quot;</span><span class="p">:</span> <span class="s2">&quot;Order B Template.docx&quot;</span>
+<span class="p">}</span>
+
+
+<span class="n">METADATA_FIELDS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="s1">&#39;evidence&#39;</span><span class="p">,</span> <span class="s1">&#39;source&#39;</span><span class="p">,</span> <span class="s1">&#39;source_document&#39;</span><span class="p">,</span> <span class="s1">&#39;chunk_id&#39;</span><span class="p">,</span> <span class="s1">&#39;confidence&#39;</span><span class="p">,</span> <span class="s1">&#39;performance&#39;</span><span class="p">,</span> <span class="s1">&#39;unit&#39;</span><span class="p">,</span> <span class="s1">&#39;page&#39;</span><span class="p">}</span>
+
+<span class="c1">#Docx filler class</span>
+<div class="viewcode-block" id="DocxFiller">
+<a class="viewcode-back" href="../doc_filling_blob.html#doc_filling_blob.DocxFiller">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DocxFiller</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Fills Word templates with JSON data (Azure Blob version).</span>
+<span class="sd">    Includes blocking logic for specific sections.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<div class="viewcode-block" id="DocxFiller.__init__">
+<a class="viewcode-back" href="../doc_filling_blob.html#doc_filling_blob.DocxFiller.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">order_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;A&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize with JSON data from rag_query.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            json_data: Dict with extracted parameters</span>
+<span class="sd">            order_type: &#39;A&#39; or &#39;B&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">json_data</span> <span class="o">=</span> <span class="n">json_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">order_type</span> <span class="o">=</span> <span class="n">order_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">json_data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chunk_lookup</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">blocked_sections</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="sa">r</span><span class="s1">&#39;Weitere\s+Routineprüfungen&#39;</span><span class="p">,</span> 
+            <span class="sa">r</span><span class="s1">&#39;Weitere\s+Typprüfungen&#39;</span><span class="p">,</span>       
+        <span class="p">]</span>
+        
+        <span class="c1">#Azure setup</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blob_client</span> <span class="o">=</span> <span class="n">BlobServiceClient</span><span class="o">.</span><span class="n">from_connection_string</span><span class="p">(</span><span class="n">AZURE_CONN_STR</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">template_container</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blob_client</span><span class="o">.</span><span class="n">get_container_client</span><span class="p">(</span><span class="n">TEMPLATE_CONTAINER</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_container</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blob_client</span><span class="o">.</span><span class="n">get_container_client</span><span class="p">(</span><span class="n">OUTPUT_CONTAINER</span><span class="p">)</span>
+        
+        <span class="c1">#Create output container if doesn&#39;t exist</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_container</span><span class="o">.</span><span class="n">create_container</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">pass</span></div>
+
+    
+<div class="viewcode-block" id="DocxFiller.normalize">
+<a class="viewcode-back" href="../doc_filling_blob.html#doc_filling_blob.DocxFiller.normalize">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">normalize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^\d+(\.\d+)*\s*--?\s*&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\s*/\s*&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">text</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;[^\w\s]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">())</span></div>
+
+    
+
+<div class="viewcode-block" id="DocxFiller.find_json_key">
+<a class="viewcode-back" href="../doc_filling_blob.html#doc_filling_blob.DocxFiller.find_json_key">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">find_json_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">heading</span><span class="p">):</span>
+        <span class="n">norm_heading</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">heading</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">norm_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">norm_key</span> <span class="ow">in</span> <span class="n">norm_heading</span> <span class="ow">or</span> <span class="n">norm_heading</span> <span class="ow">in</span> <span class="n">norm_key</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">key</span>
+            
+            <span class="n">words_h</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">norm_heading</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+            <span class="n">words_k</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">norm_key</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">words_h</span> <span class="ow">and</span> <span class="n">words_k</span><span class="p">:</span>
+                <span class="n">overlap</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">words_h</span> <span class="o">&amp;</span> <span class="n">words_k</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">overlap</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">overlap</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">words_h</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">words_k</span><span class="p">))</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">key</span>
+        
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_apply_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Append unit to a value at every level: scalar, dict leaf, or list item.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">unit</span> <span class="ow">or</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">value</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_unit</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_apply_unit</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="DocxFiller.strip_metadata">
+<a class="viewcode-back" href="../doc_filling_blob.html#doc_filling_blob.DocxFiller.strip_metadata">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">strip_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Recursively strip metadata fields from any dict at any nesting level.</span>
+<span class="sd">        Unit is appended to every leaf value (scalar, dict values, list items).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">strip_metadata</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">data</span>
+
+        <span class="c1">#metadata wrapper: {value, evidence, source, chunk_id, confidence, unit}</span>
+        <span class="k">if</span> <span class="s1">&#39;value&#39;</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="n">k</span> <span class="ow">in</span> <span class="n">data</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;evidence&#39;</span><span class="p">,</span> <span class="s1">&#39;source&#39;</span><span class="p">,</span> <span class="s1">&#39;source_document&#39;</span><span class="p">,</span> <span class="s1">&#39;chunk_id&#39;</span><span class="p">,</span> <span class="s1">&#39;confidence&#39;</span><span class="p">)):</span>
+            <span class="n">raw_value</span>   <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)</span>
+            <span class="n">unit</span>        <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;unit&#39;</span><span class="p">)</span>
+            <span class="n">clean_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">strip_metadata</span><span class="p">(</span><span class="n">raw_value</span><span class="p">)</span>
+            <span class="c1"># Apply unit at every level (scalar, nested dict, or list)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_unit</span><span class="p">(</span><span class="n">clean_value</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
+
+        <span class="c1">#sub_parameters wrapper</span>
+        <span class="k">if</span> <span class="s1">&#39;sub_parameters&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">strip_metadata</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;sub_parameters&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+        <span class="c1">#generic dict: recurse, drop metadata/base_term keys</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">METADATA_FIELDS</span> <span class="o">|</span> <span class="p">{</span><span class="s1">&#39;base_term&#39;</span><span class="p">}:</span>
+                <span class="k">continue</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">strip_metadata</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span> <span class="k">if</span> <span class="n">result</span> <span class="k">else</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="DocxFiller.get_value">
+<a class="viewcode-back" href="../doc_filling_blob.html#doc_filling_blob.DocxFiller.get_value">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="kc">None</span>
+
+        <span class="c1">#Get unit before stripping (used for table column headers on nested values)</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;unit&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">strip_metadata</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">value</span><span class="p">,</span> <span class="n">unit</span></div>
+
+    
+<div class="viewcode-block" id="DocxFiller.is_heading">
+<a class="viewcode-back" href="../doc_filling_blob.html#doc_filling_blob.DocxFiller.is_heading">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_heading</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">para</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">para</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;Heading&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;berschrift&#39;</span> <span class="ow">in</span> <span class="n">para</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">name</span></div>
+
+    
+<div class="viewcode-block" id="DocxFiller.remove_content_after_heading">
+<a class="viewcode-back" href="../doc_filling_blob.html#doc_filling_blob.DocxFiller.remove_content_after_heading">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove_content_after_heading</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc</span><span class="p">,</span> <span class="n">heading_idx</span><span class="p">):</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">_element</span><span class="o">.</span><span class="n">body</span>
+        <span class="n">all_elems</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+        <span class="n">heading_elem</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">paragraphs</span><span class="p">[</span><span class="n">heading_idx</span><span class="p">]</span><span class="o">.</span><span class="n">_element</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">start_pos</span> <span class="o">=</span> <span class="n">all_elems</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">heading_elem</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">return</span>
+        
+        <span class="n">to_remove</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_elems</span><span class="p">)):</span>
+            <span class="n">elem</span> <span class="o">=</span> <span class="n">all_elems</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            
+            <span class="k">if</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;}p&#39;</span><span class="p">):</span>
+                <span class="n">is_heading</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">paragraphs</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">_element</span> <span class="o">==</span> <span class="n">elem</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_heading</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+                        <span class="n">is_heading</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+                <span class="k">if</span> <span class="n">is_heading</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="n">to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;}tbl&#39;</span><span class="p">):</span>
+                <span class="n">to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">to_remove</span><span class="p">:</span>
+            <span class="n">elem</span><span class="o">.</span><span class="n">getparent</span><span class="p">()</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="DocxFiller.make_table">
+<a class="viewcode-back" href="../doc_filling_blob.html#doc_filling_blob.DocxFiller.make_table">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="c1">#Check if any value is itself a non-trivial dict (truly nested table)</span>
+            <span class="n">truly_nested</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">v</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">k</span> <span class="ow">in</span> <span class="n">METADATA_FIELDS</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">v</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">truly_nested</span><span class="p">:</span>
+                <span class="c1">#Multi-column table: one column per sub-key</span>
+                <span class="n">cols</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                        <span class="n">cols</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">v</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">METADATA_FIELDS</span><span class="p">)</span>
+
+                <span class="n">cols</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span>
+                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;Parameter&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">cols</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                        <span class="n">row</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">:</span>
+                            <span class="n">val</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
+                            <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
+                        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Simple Parameter | Value table (handles sub_parameters output)</span>
+                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;Parameter&#39;</span><span class="p">,</span> <span class="s1">&#39;Value&#39;</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">METADATA_FIELDS</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="n">display_val</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                    <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">k</span><span class="p">,</span> <span class="n">display_val</span><span class="p">])</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="s1">&#39;Value&#39;</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">item</span><span class="p">)])</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">rows</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">table</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">add_table</span><span class="p">(</span><span class="n">rows</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">),</span> <span class="n">cols</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="s1">&#39;Table Grid&#39;</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row_data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rows</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">cell_text</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">row_data</span><span class="p">):</span>
+                <span class="n">table</span><span class="o">.</span><span class="n">rows</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">cells</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cell_text</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">rows</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">cells</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">paragraphs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">runs</span><span class="p">:</span>
+                        <span class="n">run</span><span class="o">.</span><span class="n">bold</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="n">table</span><span class="o">.</span><span class="n">_element</span></div>
+
+    
+<div class="viewcode-block" id="DocxFiller.make_cooling_table">
+<a class="viewcode-back" href="../doc_filling_blob.html#doc_filling_blob.DocxFiller.make_cooling_table">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">make_cooling_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc</span><span class="p">,</span> <span class="n">cooling_types</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build a table: cooling types + rated power per cooling type.</span>
+<span class="sd">        Unit is already embedded in values by strip_metadata, so no unit in headers.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rated_power_data</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="s1">&#39;rated_power&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">rated_power_data</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rated_power_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">rows</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;Cooling Type&#39;</span><span class="p">]]</span>
+            <span class="k">for</span> <span class="n">ct</span> <span class="ow">in</span> <span class="n">cooling_types</span><span class="p">:</span>
+                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">ct</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sample</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">rated_power_data</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="kc">None</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="c1"># Nested: {&quot;ONAN&quot;: {&quot;continuous&quot;: &quot;500 MVA&quot;, &quot;peak&quot;: &quot;600 MVA&quot;}}</span>
+                <span class="n">all_cols</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">ct</span> <span class="ow">in</span> <span class="n">cooling_types</span><span class="p">:</span>
+                    <span class="n">ct_data</span> <span class="o">=</span> <span class="n">rated_power_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ct</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ct_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                        <span class="n">all_cols</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">ct_data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+                <span class="k">if</span> <span class="n">all_cols</span><span class="p">:</span>
+                    <span class="n">cols</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">all_cols</span><span class="p">)</span>
+                    <span class="n">rows</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;Cooling Type&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">cols</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">ct</span> <span class="ow">in</span> <span class="n">cooling_types</span><span class="p">:</span>
+                        <span class="n">row</span> <span class="o">=</span> <span class="p">[</span><span class="n">ct</span><span class="p">]</span>
+                        <span class="n">ct_data</span> <span class="o">=</span> <span class="n">rated_power_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ct</span><span class="p">,</span> <span class="p">{})</span>
+                        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">:</span>
+                            <span class="n">val</span> <span class="o">=</span> <span class="n">ct_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">col</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ct_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+                            <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
+                        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">rows</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;Cooling Type&#39;</span><span class="p">]]</span>
+                    <span class="k">for</span> <span class="n">ct</span> <span class="ow">in</span> <span class="n">cooling_types</span><span class="p">:</span>
+                        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">ct</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Flat: {&quot;ONAN&quot;: &quot;500 MVA&quot;, &quot;ONAF&quot;: &quot;750 MVA&quot;}</span>
+                <span class="n">rows</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;Cooling Type&#39;</span><span class="p">,</span> <span class="s1">&#39;Rated Power&#39;</span><span class="p">]]</span>
+                <span class="k">for</span> <span class="n">ct</span> <span class="ow">in</span> <span class="n">cooling_types</span><span class="p">:</span>
+                    <span class="n">val</span> <span class="o">=</span> <span class="n">rated_power_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ct</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
+                    <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">ct</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s1">&#39;-&#39;</span><span class="p">])</span>
+
+        <span class="n">table</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">add_table</span><span class="p">(</span><span class="n">rows</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">),</span> <span class="n">cols</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">table</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="s1">&#39;Table Grid&#39;</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row_data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rows</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">cell_text</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">row_data</span><span class="p">):</span>
+                <span class="n">table</span><span class="o">.</span><span class="n">rows</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">cells</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cell_text</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">rows</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">cells</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">paragraphs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">runs</span><span class="p">:</span>
+                        <span class="n">run</span><span class="o">.</span><span class="n">bold</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="n">table</span><span class="o">.</span><span class="n">_element</span></div>
+
+    
+    <span class="k">def</span><span class="w"> </span><span class="nf">_parse_chunk_id_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chunk_id_str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parse chunk_id string like &#39;TenneT_715MVA_SPE.01.456-G-VK715_text_37&#39;</span>
+<span class="sd">        into (doc_name, page).</span>
+
+<span class="sd">        Format: {ProjectName}_{DocName}_{text|table}_{number}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">chunk_id_str</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span>
+
+        <span class="c1"># First try pkl lookup (most accurate)</span>
+        <span class="k">if</span> <span class="n">chunk_id_str</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_lookup</span><span class="p">:</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chunk_lookup</span><span class="p">[</span><span class="n">chunk_id_str</span><span class="p">]</span>
+            <span class="n">doc_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;source&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;source&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">chunk_id_str</span>
+            <span class="n">page</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;page&#39;</span><span class="p">])</span> <span class="k">if</span> <span class="n">info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;page&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;-&#39;</span>
+            <span class="k">return</span> <span class="n">doc_name</span><span class="p">,</span> <span class="n">page</span>
+
+        <span class="c1"># Fallback: parse the string</span>
+        <span class="c1"># Strip trailing _{text|table}_{number}</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;^(.+?)_(text|table)_(\d+)$&#39;</span><span class="p">,</span> <span class="n">chunk_id_str</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>   <span class="c1"># e.g. TenneT_715MVA_SPE.01.456-G-VK715</span>
+            <span class="n">page</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>   <span class="c1"># e.g. 37</span>
+
+            <span class="c1"># Extract doc name: find first segment containing a dot or dash</span>
+            <span class="c1"># (document IDs like SPE.01.456-G-VK715 have dots/dashes)</span>
+            <span class="n">parts</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+            <span class="n">doc_parts</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;.&#39;</span> <span class="ow">in</span> <span class="n">part</span> <span class="ow">or</span> <span class="s1">&#39;-&#39;</span> <span class="ow">in</span> <span class="n">part</span><span class="p">:</span>
+                    <span class="n">doc_parts</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="n">parts</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">part</span><span class="p">):]</span>
+                    <span class="k">break</span>
+
+            <span class="n">doc_name</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">doc_parts</span><span class="p">)</span> <span class="k">if</span> <span class="n">doc_parts</span> <span class="k">else</span> <span class="n">base</span>
+            <span class="k">return</span> <span class="n">doc_name</span><span class="p">,</span> <span class="n">page</span>
+
+        <span class="k">return</span> <span class="n">chunk_id_str</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_source_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get (source_document, page) for a given JSON key.</span>
+<span class="sd">        Extracts source_document and page directly from JSON structure.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">find_refs</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+            <span class="c1">#Check for source_document and page fields</span>
+            <span class="k">if</span> <span class="s1">&#39;source_document&#39;</span> <span class="ow">in</span> <span class="n">d</span> <span class="ow">or</span> <span class="s1">&#39;page&#39;</span> <span class="ow">in</span> <span class="n">d</span><span class="p">:</span>
+                <span class="n">source_doc</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;source_document&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
+                <span class="n">page</span>       <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;page&#39;</span><span class="p">)</span>
+                
+                <span class="c1">#Handle page conversion safely</span>
+                <span class="n">page_str</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span>
+                <span class="k">if</span> <span class="n">page</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">page_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">page</span><span class="p">))</span>
+                    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                        <span class="c1">#If page is &#39;none&#39; or any other invalid value, use &#39;-&#39;</span>
+                        <span class="n">page_str</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span> <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="n">page</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;none&#39;</span><span class="p">,</span> <span class="s1">&#39;null&#39;</span><span class="p">,</span> <span class="s1">&#39;n/a&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+                
+                <span class="k">return</span> <span class="n">source_doc</span> <span class="ow">or</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">page_str</span>
+
+            <span class="c1"># Recurse into nested dicts</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="n">doc</span><span class="p">,</span> <span class="n">pg</span> <span class="o">=</span> <span class="n">find_refs</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">doc</span> <span class="ow">and</span> <span class="n">doc</span> <span class="o">!=</span> <span class="s1">&#39;-&#39;</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">doc</span><span class="p">,</span> <span class="n">pg</span>
+
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+        <span class="n">source_doc</span><span class="p">,</span> <span class="n">page</span> <span class="o">=</span> <span class="n">find_refs</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">source_doc</span> <span class="ow">or</span> <span class="s1">&#39;-&#39;</span><span class="p">),</span> <span class="p">(</span><span class="n">page</span> <span class="ow">or</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
+     
+    <span class="c1">#Process document with blocking logic for specific sections </span>
+<div class="viewcode-block" id="DocxFiller.process">
+<a class="viewcode-back" href="../doc_filling_blob.html#doc_filling_blob.DocxFiller.process">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doc</span><span class="p">):</span>
+        <span class="c1">#Find all headings and match to JSON keys</span>
+        <span class="n">actions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">para</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">paragraphs</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_heading</span><span class="p">(</span><span class="n">para</span><span class="p">):</span>
+                <span class="n">heading_text</span> <span class="o">=</span> <span class="n">para</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                
+                <span class="c1">#Skip sections that are in blocked_sections list (leave them blank)</span>
+                <span class="n">skip_section</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocked_sections</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">heading_text</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">):</span>
+                        <span class="n">skip_section</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;BLOCKED: </span><span class="si">{</span><span class="n">heading_text</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="k">break</span>
+                
+                <span class="k">if</span> <span class="n">skip_section</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                
+                <span class="n">key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_json_key</span><span class="p">(</span><span class="n">heading_text</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">key</span><span class="p">:</span>
+                    <span class="n">value</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">actions</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">heading_text</span><span class="p">))</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   ✓ </span><span class="si">{</span><span class="n">heading_text</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Matched: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">actions</span><span class="p">)</span><span class="si">}</span><span class="s2"> sections</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1">#Process in reverse order</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">heading</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">actions</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_content_after_heading</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+
+            <span class="n">heading_elem</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">paragraphs</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">_element</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="n">heading_elem</span><span class="o">.</span><span class="n">getparent</span><span class="p">()</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">heading_elem</span><span class="p">)</span>
+
+            <span class="n">new_elems</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">unit_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">unit</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+
+            <span class="c1">#Frequency special case</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;frequency&#39;</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">add_paragraph</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Frequency: </span><span class="si">{</span><span class="n">value</span><span class="si">}{</span><span class="n">unit_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">new_elems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">_element</span><span class="p">)</span>
+
+            <span class="c1">#Cooling type - special combined table</span>
+            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;cooling_type&#39;</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_cooling_table</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">table</span><span class="p">:</span>
+                    <span class="n">new_elems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+
+            <span class="c1">#String</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
+                        <span class="n">p</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">add_paragraph</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+                        <span class="n">new_elems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">_element</span><span class="p">)</span>
+
+            <span class="c1">#Number</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">add_paragraph</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">value</span><span class="si">}{</span><span class="n">unit_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">new_elems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">_element</span><span class="p">)</span>
+
+            <span class="c1">#List of simple values</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">value</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+                        <span class="n">p</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">add_paragraph</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="n">new_elems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">_element</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_table</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">table</span><span class="p">:</span>
+                        <span class="n">new_elems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+
+            <span class="c1">#Dict → table</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_table</span><span class="p">(</span><span class="n">doc</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">table</span><span class="p">:</span>
+                    <span class="n">new_elems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+
+            <span class="c1">#Spacing</span>
+            <span class="n">new_elems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">add_paragraph</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">_element</span><span class="p">)</span>
+
+            <span class="c1">#Insert elements after heading</span>
+            <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">new_elems</span><span class="p">):</span>
+                <span class="n">parent</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">elem</span><span class="p">)</span>
+
+        <span class="c1">#Only parameters that were actually filled, with source_document + page</span>
+        <span class="n">filled_keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">key</span> <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="n">actions</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">filled_keys</span><span class="p">:</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">add_heading</span><span class="p">(</span><span class="s1">&#39;References&#39;</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1">#Build reference rows</span>
+            <span class="n">ref_rows</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;Parameter&#39;</span><span class="p">,</span> <span class="s1">&#39;Source Document&#39;</span><span class="p">,</span> <span class="s1">&#39;Page&#39;</span><span class="p">]]</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">filled_keys</span><span class="p">:</span>
+                <span class="n">source_doc</span><span class="p">,</span> <span class="n">page</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_source_info</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">source_doc</span> <span class="ow">and</span> <span class="n">source_doc</span> <span class="o">!=</span> <span class="s1">&#39;-&#39;</span><span class="p">:</span>
+                    <span class="n">page_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">page</span><span class="p">)</span> <span class="k">if</span> <span class="n">page</span> <span class="k">else</span> <span class="s1">&#39;-&#39;</span>
+                    <span class="n">ref_rows</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">title</span><span class="p">(),</span> <span class="n">source_doc</span><span class="p">,</span> <span class="n">page_str</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ref_rows</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>  
+                <span class="n">ref_table</span> <span class="o">=</span> <span class="n">doc</span><span class="o">.</span><span class="n">add_table</span><span class="p">(</span><span class="n">rows</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">ref_rows</span><span class="p">),</span> <span class="n">cols</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+                <span class="n">ref_table</span><span class="o">.</span><span class="n">style</span> <span class="o">=</span> <span class="s1">&#39;Table Grid&#39;</span>
+
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">row_data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ref_rows</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">cell_text</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">row_data</span><span class="p">):</span>
+                        <span class="n">ref_table</span><span class="o">.</span><span class="n">rows</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">cells</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">cell_text</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="k">for</span> <span class="n">run</span> <span class="ow">in</span> <span class="n">ref_table</span><span class="o">.</span><span class="n">rows</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">cells</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">paragraphs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">runs</span><span class="p">:</span>
+                                <span class="n">run</span><span class="o">.</span><span class="n">bold</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+    
+    <span class="c1">#Download template from Azure blob</span>
+<div class="viewcode-block" id="DocxFiller.download_template">
+<a class="viewcode-back" href="../doc_filling_blob.html#doc_filling_blob.DocxFiller.download_template">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">download_template</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temp_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">template_name</span> <span class="o">=</span> <span class="n">TEMPLATE_NAMES</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">order_type</span><span class="p">]</span>
+        <span class="n">local_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">temp_dir</span><span class="p">)</span> <span class="o">/</span> <span class="n">template_name</span>
+        
+        <span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">template_container</span>
+                    <span class="o">.</span><span class="n">get_blob_client</span><span class="p">(</span><span class="n">template_name</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">download_blob</span><span class="p">()</span>
+                    <span class="o">.</span><span class="n">readall</span><span class="p">())</span>
+        
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">local_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Template downloaded&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">local_path</span><span class="p">)</span></div>
+
+    
+    <span class="c1">#Upload filled document to Azure blob</span>
+<div class="viewcode-block" id="DocxFiller.upload_output">
+<a class="viewcode-back" href="../doc_filling_blob.html#doc_filling_blob.DocxFiller.upload_output">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">upload_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">blob_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">/Order_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">order_type</span><span class="si">}</span><span class="s2">.docx&quot;</span>
+        
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">local_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_container</span><span class="o">.</span><span class="n">upload_blob</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">blob_name</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">f</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; Uploaded to </span><span class="si">{</span><span class="n">OUTPUT_CONTAINER</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">blob_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">blob_name</span></div>
+
+    
+    <span class="c1">#Full pipeline: Download → Fill → Upload</span>
+<div class="viewcode-block" id="DocxFiller.run">
+<a class="viewcode-back" href="../doc_filling_blob.html#doc_filling_blob.DocxFiller.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">60</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FILLING ORDER </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">order_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="o">*</span><span class="mi">60</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Project: </span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Sections: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">temp_dir</span><span class="p">:</span>
+            <span class="c1">#Download template</span>
+            <span class="n">template_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">download_template</span><span class="p">(</span><span class="n">temp_dir</span><span class="p">)</span>
+            
+            <span class="c1">#Load and process</span>
+            <span class="n">doc</span> <span class="o">=</span> <span class="n">Document</span><span class="p">(</span><span class="n">template_path</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">doc</span><span class="p">)</span>
+            
+            <span class="c1">#Save locally</span>
+            <span class="n">output_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">temp_dir</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;Order_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">order_type</span><span class="si">}</span><span class="s2">_filled.docx&quot;</span><span class="p">)</span>
+            <span class="n">doc</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">output_path</span><span class="p">)</span>
+            
+            <span class="c1">#Upload to blob</span>
+            <span class="n">blob_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upload_output</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="n">project_name</span><span class="p">)</span>
+            
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Order </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">order_type</span><span class="si">}</span><span class="s2"> complete!</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">blob_path</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Your Team.
+      <span class="lastupdated">Last updated on Mar 11, 2026.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

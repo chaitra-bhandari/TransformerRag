@@ -19,9 +19,6 @@ You need:
 
 .. code-block:: bash
 
-    # macOS/Linux
-    source venv/bin/activate
-
     # Windows
     venv\Scripts\activate
 
@@ -31,7 +28,6 @@ Ensure your ``.env`` file is complete:
 
 .. code-block:: bash
 
-    cat .env  # macOS/Linux
     type .env # Windows
 
 Required variables:
@@ -107,7 +103,7 @@ Core Workflow
 
 .. code-block:: text
 
-    1. User uploads PDF/DOCX/XLSX
+    1. User uploads PDF
            ↓
     2. Document Intelligence extracts content
            ↓
@@ -115,17 +111,15 @@ Core Workflow
            ↓
     4. Chunks converted to embeddings
            ↓
-    5. Stored in Azure AI Search index
+    5. Stored in  Faiss index
            ↓
-    6. User queries via chat interface
+    6. System retrieves relevant chunks
            ↓
-    7. System retrieves relevant chunks
+    7. RAG generates specification document
            ↓
-    8. RAG generates specification document
+    8. Document filled with extracted parameters
            ↓
-    9. Document filled with extracted parameters
-           ↓
-    10. Download as .docx file
+    9. Download as .docx file
 
 Using the Web Interface
 =======================
@@ -135,18 +129,18 @@ Using the Web Interface
 .. code-block:: text
 
     1. Select Project Type
-       - Standalone: Single configuration (onshore or offshore)
+       - Standalone: Single configuration (currently working)
        - Combined: Both onshore and offshore
 
     2. Choose Files
-       - Supports PDF, DOCX, XLSX
+       - Supports PDF
        - Max 100MB per file
 
     3. Click Upload
        - Files sent to backend
        - Processing begins immediately
 
-**Chat Tab**
+**Chat Tab(needs improvment)**
 
 .. code-block:: text
 
@@ -164,45 +158,6 @@ Using the Web Interface
        - Generated .docx files available
        - Can download and edit further
 
-API Examples
-============
-
-**Upload a Document**
-
-.. code-block:: bash
-
-    curl -X POST "http://localhost:8000/upload" \
-      -H "X-API-Key: your_api_key" \
-      -F "project_folder=MyProject_onshore" \
-      -F "files=@document.pdf"
-
-**Query with RAG**
-
-.. code-block:: bash
-
-    curl -X POST "http://localhost:8000/query" \
-      -H "X-API-Key: your_api_key" \
-      -H "Content-Type: application/json" \
-      -d '{
-        "question": "What is the transformer rated voltage?",
-        "project_folder": "MyProject_onshore"
-      }'
-
-**Generate Document**
-
-.. code-block:: bash
-
-    curl -X POST "http://localhost:8000/generate-document" \
-      -H "X-API-Key: your_api_key" \
-      -H "Content-Type: application/json" \
-      -d '{
-        "parameters": {
-          "transformer_name": "Unit-01",
-          "voltage": "400 kV"
-        },
-        "template": "Order_A.docx"
-      }'
-
 Common Tasks
 ============
 
@@ -212,41 +167,8 @@ Extracting Specifications from a PDF
 **Via Web Interface:**
 
 1. Upload PDF (automatic DI extraction)
-2. Ask: "Extract all transformer specifications"
-3. Review results in chat
-4. Click to download generated document
-
-**Via Python API:**
-
-.. code-block:: python
-
-    import requests
-    import json
-
-    headers = {"X-API-Key": "your_api_key"}
-
-    # Query for specifications
-    response = requests.post(
-        "http://localhost:8000/query",
-        headers=headers,
-        json={
-            "question": "List transformer ratings and specifications",
-            "project_folder": "MyProject_onshore"
-        }
-    )
-
-    specifications = response.json()
-    print(json.dumps(specifications, indent=2))
-
-Comparing Multiple Documents
------------------------------
-
-1. Upload all documents to same project
-2. Ask questions that span documents:
-   - "Which transformer has highest capacity?"
-   - "Compare specifications across all files"
-3. System retrieves from all documents
-4. Results show cross-document insights
+2. Ask: "Generate documents"
+3. Click to download generated document
 
 Generating Specification Documents
 -----------------------------------
@@ -283,22 +205,6 @@ Performance Tips
 
 System Limitations & Workarounds
 =================================
-
-**Maximum file size: 100 MB**
-
-Workaround: Split large documents into sections
-
-**Single PDF page = 50 MB images**
-
-Workaround: Use text-based PDFs, not scanned images
-
-**Cannot process handwritten documents**
-
-Workaround: OCR scan first or use typed specifications
-
-**Embeddings limited to 8,191 tokens**
-
-Workaround: System auto-chunks long sections
 
 **Azure DI may struggle with**
 - Dense tables with many columns
@@ -344,26 +250,6 @@ Open browser console:
     except Exception as e:
         print(f"✗ Azure Storage error: {e}")
 
-Next Steps
-==========
-
-After successfully uploading and querying:
-
-1. **Explore the API**: :doc:`api/endpoints`
-2. **Understand the architecture**: :doc:`architecture`
-3. **Learn about each module**: :doc:`modules/index`
-4. **Deploy to production**: :doc:`deployment`
-
-Getting Help
-============
-
-If something doesn't work:
-
-1. Check :doc:`troubleshooting` section
-2. Review :doc:`faq` for common issues
-3. Look at :doc:`configuration` to verify setup
-4. Check Azure Portal for service status
-5. Review application logs for error messages
 
 .. note::
 

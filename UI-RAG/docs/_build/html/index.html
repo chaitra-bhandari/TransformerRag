@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transformer Spec RAG Documentation &mdash; Transformer Spec RAG 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=8d563738"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            Transformer Spec RAG
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Architecture &amp; Design</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">UI-RAG</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Support</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Transformer Spec RAG</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Transformer Spec RAG Documentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="transformer-spec-rag-documentation">
+<h1>Transformer Spec RAG Documentation<a class="headerlink" href="#transformer-spec-rag-documentation" title="Link to this heading"></a></h1>
+<p>Welcome to <strong>Transformer Spec RAG</strong> — an AI-powered document extraction and specification generation system using Retrieval-Augmented Generation (RAG).</p>
+<p>This documentation provides complete information about the system architecture, module guides, API reference, and usage instructions.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#check-your-python-version">Check Your Python Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-1-clone-the-repository">Step 1: Clone the Repository</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-2-create-virtual-environment">Step 2: Create Virtual Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-3-install-dependencies">Step 3: Install Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#dependencies-breakdown">Dependencies Breakdown</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-4-configure-environment-variables">Step 4: Configure Environment Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-5-verify-installation">Step 5: Verify Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#step-6-start-the-application">Step 6: Start the Application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#docker-installation-optional">Docker Installation (Optional)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#troubleshooting-installation">Troubleshooting Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#next-steps">Next Steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#getting-help">Getting Help</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#minute-setup">5-Minute Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#your-first-upload">Your First Upload</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#core-workflow">Core Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#using-the-web-interface">Using the Web Interface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#api-examples">API Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#common-tasks">Common Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#performance-tips">Performance Tips</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#system-limitations-workarounds">System Limitations &amp; Workarounds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#debugging">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#next-steps">Next Steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html#getting-help">Getting Help</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Architecture &amp; Design</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#system-overview">System Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#core-processing-pipeline">Core Processing Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#data-flow-diagram">Data Flow Diagram</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#database-storage-architecture">Database &amp; Storage Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#api-layer-architecture">API Layer Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#frontend-architecture">Frontend Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#scalability-considerations">Scalability Considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#security-architecture">Security Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#module-dependencies">Module Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#deployment-architecture">Deployment Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">UI-RAG</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="app.html">app module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="chunk_by_title_semantic_blob.html">chunk_by_title_semantic_blob module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="doc_extraction_using_di.html">doc_extraction_using_di module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="doc_filling_blob.html">doc_filling_blob module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rag_query.html">rag_query module</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Support</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#general-troubleshooting-steps">General Troubleshooting Steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#installation-issues">Installation Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#configuration-issues">Configuration Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#azure-authentication-issues">Azure Authentication Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#api-backend-issues">API &amp; Backend Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#document-processing-issues">Document Processing Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#query-rag-issues">Query &amp; RAG Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#performance-issues">Performance Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#frontend-issues">Frontend Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="troubleshooting.html#getting-more-help">Getting More Help</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>The system processes transformer specification documents through a multi-stage pipeline:</p>
+<ol class="arabic simple">
+<li><p><strong>Document Extraction</strong> — Azure Document Intelligence extracts content from PDFs, DOCX, and XLSX files</p></li>
+<li><p><strong>Semantic Chunking</strong> — Intelligent chunking by title with noise removal and proper metadata</p></li>
+<li><p><strong>Vector Indexing</strong> — FAISS vector search combined with BM25 hybrid retrieval</p></li>
+<li><p><strong>RAG Query</strong> — Uses Azure OpenAI to extract specific transformer parameters</p></li>
+<li><p><strong>Document Generation</strong> — Fills Word templates with extracted data</p></li>
+</ol>
+<section id="key-features">
+<h3>Key Features<a class="headerlink" href="#key-features" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>✅ Automatic document processing pipeline</p></li>
+<li><p>✅ Hybrid search (vector + keyword retrieval)</p></li>
+<li><p>✅ Deep-dive search for null values</p></li>
+<li><p>✅ Duplicate file detection</p></li>
+<li><p>✅ Image page detection</p></li>
+<li><p>✅ Azure Blob Storage integration</p></li>
+<li><p>✅ FastAPI backend with CORS support</p></li>
+<li><p>✅ Real-time processing status updates</p></li>
+</ul>
+</section>
+<section id="quick-links">
+<h3>Quick Links<a class="headerlink" href="#quick-links" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Getting Started</strong>: <span class="xref std std-doc">getting-started</span></p></li>
+<li><p><strong>Installation Guide</strong>: <a class="reference internal" href="installation.html"><span class="doc">Installation</span></a></p></li>
+<li><p><strong>API Reference</strong>: <span class="xref std std-doc">api/app</span></p></li>
+<li><p><strong>Configuration</strong>: <span class="xref std std-doc">configuration</span></p></li>
+<li><p><strong>Troubleshooting</strong>: <a class="reference internal" href="troubleshooting.html"><span class="doc">Troubleshooting</span></a></p></li>
+</ul>
+</section>
+<section id="project-structure">
+<h3>Project Structure<a class="headerlink" href="#project-structure" title="Link to this heading"></a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>transformer-spec-rag/
+├── docs/                          # Documentation (this folder)
+├── app.py                         # FastAPI backend
+├── doc_extraction_using_di.py    # Document extraction module
+├── chunk_by_title_semantic_blob.py  # Chunking module
+├── rag_query.py                   # RAG query engine
+├── doc_filling_blob.py           # Document filling module
+├── Docflow_chatui.jsx            # React frontend
+├── requirements.txt               # Python dependencies
+├── .env.example                   # Example environment variables
+└── .readthedocs.yaml             # ReadTheDocs configuration
+</pre></div>
+</div>
+</section>
+<section id="installation">
+<h3>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h3>
+<p>To get started quickly:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clone the repository</span>
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/yourusername/transformer-spec-rag.git
+<span class="nb">cd</span><span class="w"> </span>transformer-spec-rag
+
+<span class="c1"># Install dependencies</span>
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+
+<span class="c1"># Configure environment</span>
+cp<span class="w"> </span>.env.example<span class="w"> </span>.env
+<span class="c1"># Edit .env with your Azure credentials</span>
+
+<span class="c1"># Run the application</span>
+python<span class="w"> </span>-m<span class="w"> </span>uvicorn<span class="w"> </span>app:app<span class="w"> </span>--reload
+</pre></div>
+</div>
+</section>
+<section id="support-contact">
+<h3>Support &amp; Contact<a class="headerlink" href="#support-contact" title="Link to this heading"></a></h3>
+<p>For issues, questions, or contributions, please visit the project repository.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This documentation is automatically generated from the source code using Sphinx and hosted on ReadTheDocs.
+For the latest version, visit the main repository.</p>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Your Team.
+      <span class="lastupdated">Last updated on Mar 11, 2026.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

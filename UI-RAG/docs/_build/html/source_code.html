@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Source Code &mdash; Transformer Spec RAG 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=8d563738"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Transformer Spec RAG
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Architecture &amp; Design</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">UI-RAG</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Support</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Transformer Spec RAG</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Source Code</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/source_code.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="source-code">
+<h1>Source Code<a class="headerlink" href="#source-code" title="Link to this heading"></a></h1>
+<p>Complete source code reference for all modules in the Transformer Spec RAG system.</p>
+<section id="project-structure">
+<h2>Project Structure<a class="headerlink" href="#project-structure" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>transformer-spec-rag/
+├── app.py                              # FastAPI application
+├── rag_query.py                        # RAG query engine (CORE)
+├── doc_extraction_using_di.py          # Document Intelligence
+├── chunk_by_title_semantic_blob.py     # Semantic chunking
+├── doc_filling_blob.py                 # Document generation
+├── Docflow_chatui.jsx                  # React chat interface
+├── Index.HTML                          # Frontend HTML
+└── .env.template                       # Environment variables
+</pre></div>
+</div>
+</section>
+<section id="core-modules">
+<h2>Core Modules<a class="headerlink" href="#core-modules" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p><strong>rag_query.py</strong> - RAG Query Engine (MOST IMPORTANT)
+- FAISS vector search
+- BM25 keyword search
+- CrossEncoder reranking
+- OpenAI GPT-4 generation
+- Language detection
+- Batch processing</p></li>
+<li><p><strong>app.py</strong> - FastAPI Backend
+- HTTP endpoints
+- File upload handling
+- Query routing
+- Document generation
+- CORS configuration</p></li>
+<li><p><strong>doc_extraction_using_di.py</strong> - Document Processing
+- Azure Document Intelligence integration
+- File download/upload
+- DI result processing
+- Duplicate detection</p></li>
+<li><p><strong>chunk_by_title_semantic_blob.py</strong> - Semantic Chunking
+- Section-aware chunking
+- Noise removal
+- Token counting
+- Hierarchical context</p></li>
+<li><p><strong>doc_filling_blob.py</strong> - Document Generation
+- DOCX template filling
+- Parameter extraction
+- Document formatting
+- Upload to blob storage</p></li>
+<li><p><strong>Docflow_chatui.jsx</strong> - React Frontend
+- Chat interface
+- File upload UI
+- Query processing
+- Results display</p></li>
+</ol>
+</section>
+<section id="key-source-files">
+<h2>Key Source Files<a class="headerlink" href="#key-source-files" title="Link to this heading"></a></h2>
+<section id="rag-query-py-core-module">
+<h3>rag_query.py (Core Module)<a class="headerlink" href="#rag-query-py-core-module" title="Link to this heading"></a></h3>
+<p><strong>This is the most important file in the system.</strong></p>
+<p>Main components:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configuration</span>
+<span class="n">OPENAI_KEY</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;OPENAI_KEY&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">OPENAI_ENDPOINT</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;OPENAI_ENDPOINT&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">CHAT_MODEL</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;CHAT_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;gpt-4o&quot;</span><span class="p">)</span>
+<span class="n">EMBEDDING_MODEL</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;EMBEDDING_MODEL&quot;</span><span class="p">,</span> <span class="s2">&quot;text-embedding-3-large&quot;</span><span class="p">)</span>
+
+<span class="c1"># Search weights</span>
+<span class="n">BM25_WEIGHT</span> <span class="o">=</span> <span class="mf">0.4</span>           <span class="c1"># Keyword search</span>
+<span class="n">VECTOR_WEIGHT</span> <span class="o">=</span> <span class="mf">0.6</span>         <span class="c1"># Vector search</span>
+
+<span class="c1"># Parameters</span>
+<span class="n">RETRIEVAL_K</span> <span class="o">=</span> <span class="mi">20</span>            <span class="c1"># Initial retrieval</span>
+<span class="n">RERANK_TOP_K</span> <span class="o">=</span> <span class="mi">10</span>           <span class="c1"># Final results</span>
+
+<span class="c1"># Batch processing</span>
+<span class="n">BATCH_SIZE</span> <span class="o">=</span> <span class="mi">6</span>              <span class="c1"># Questions per batch</span>
+</pre></div>
+</div>
+<p><strong>Key Functions:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">detect_document_language</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Auto-detect German or English documents&quot;&quot;&quot;</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">build_parameter_registry</span><span class="p">(</span><span class="n">p</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">language</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;en&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build structured questions for parameters&quot;&quot;&quot;</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">search_faiss</span><span class="p">(</span><span class="n">query_embedding</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">RETRIEVAL_K</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;FAISS vector search&quot;&quot;&quot;</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">search_bm25</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">RETRIEVAL_K</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;BM25 keyword search&quot;&quot;&quot;</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">rerank_with_crossencoder</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">chunks</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;CrossEncoder reranking for relevance&quot;&quot;&quot;</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_with_gpt4</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">language</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;OpenAI GPT-4 response generation&quot;&quot;&quot;</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">rag_query</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">language</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;en&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Complete RAG pipeline&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p><strong>Technology Stack:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">faiss</span>                    <span class="c1"># Vector search</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">openai</span><span class="w"> </span><span class="kn">import</span> <span class="n">AzureOpenAI</span>  <span class="c1"># GPT-4 API</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rank_bm25</span><span class="w"> </span><span class="kn">import</span> <span class="n">BM25Okapi</span> <span class="c1"># Keyword search</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sentence_transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">CrossEncoder</span>  <span class="c1"># Reranking</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>              <span class="c1"># Numerical computing</span>
+</pre></div>
+</div>
+<p>See: <span class="xref std std-doc">modules/rag_query</span> for complete source code and documentation</p>
+</section>
+<section id="app-py-fastapi-backend">
+<h3>app.py (FastAPI Backend)<a class="headerlink" href="#app-py-fastapi-backend" title="Link to this heading"></a></h3>
+<p><strong>Main API application</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">fastapi</span><span class="w"> </span><span class="kn">import</span> <span class="n">FastAPI</span><span class="p">,</span> <span class="n">UploadFile</span><span class="p">,</span> <span class="n">File</span><span class="p">,</span> <span class="n">Form</span><span class="p">,</span> <span class="n">HTTPException</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fastapi.middleware.cors</span><span class="w"> </span><span class="kn">import</span> <span class="n">CORSMiddleware</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uvicorn</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Transformer Spec RAG&quot;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s2">&quot;1.0.0&quot;</span><span class="p">)</span>
+
+<span class="c1"># CORS configuration</span>
+<span class="n">app</span><span class="o">.</span><span class="n">add_middleware</span><span class="p">(</span>
+    <span class="n">CORSMiddleware</span><span class="p">,</span>
+    <span class="n">allow_origins</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;http://localhost:3000&quot;</span><span class="p">,</span> <span class="s2">&quot;http://localhost:8000&quot;</span><span class="p">],</span>
+    <span class="n">allow_methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">,</span> <span class="s2">&quot;PUT&quot;</span><span class="p">,</span> <span class="s2">&quot;DELETE&quot;</span><span class="p">],</span>
+    <span class="n">allow_headers</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;*&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Main Endpoints:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/upload&quot;</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">upload_project</span><span class="p">(</span>
+    <span class="n">project_folder</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Form</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+    <span class="n">files</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">UploadFile</span><span class="p">]</span> <span class="o">=</span> <span class="n">File</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Upload documents for a project&quot;&quot;&quot;</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/query&quot;</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">query_documents</span><span class="p">(</span>
+    <span class="n">question</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">project_folder</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;RAG query on documents&quot;&quot;&quot;</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">&quot;/generate-document&quot;</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">generate_document</span><span class="p">(</span>
+    <span class="n">project_folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">template</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">parameters</span><span class="p">:</span> <span class="nb">dict</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate specification document&quot;&quot;&quot;</span>
+
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/health&quot;</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">health_check</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Health check endpoint&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p>See: <span class="xref std std-doc">api/endpoints</span> for complete API reference</p>
+</section>
+<section id="doc-extraction-using-di-py">
+<h3>doc_extraction_using_di.py<a class="headerlink" href="#doc-extraction-using-di-py" title="Link to this heading"></a></h3>
+<p><strong>Azure Document Intelligence Integration</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">azure.ai.formrecognizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">DocumentAnalysisClient</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">azure.storage.blob</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlobServiceClient</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">TransformerDocumentProcessor</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">di_client</span> <span class="o">=</span> <span class="n">DocumentAnalysisClient</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blob_client</span> <span class="o">=</span> <span class="n">BlobServiceClient</span><span class="o">.</span><span class="n">from_connection_string</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">project_folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process all files in project&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_with_di</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">file_info</span><span class="p">:</span> <span class="n">Dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run Azure Document Intelligence&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">detect_image_pages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pdf_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Detect image-heavy pages&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p><strong>Output Structure:</strong></p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;pages&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;paragraphs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;tables&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">&quot;spans&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>See: <span class="xref std std-doc">modules/extraction</span> for complete documentation</p>
+</section>
+<section id="chunk-by-title-semantic-blob-py">
+<h3>chunk_by_title_semantic_blob.py<a class="headerlink" href="#chunk-by-title-semantic-blob-py" title="Link to this heading"></a></h3>
+<p><strong>Semantic Chunking Implementation</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tiktoken</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">HierarchicalContext</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Track document structure hierarchy&quot;&quot;&quot;</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">DocumentChunker</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">min_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">max_characters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4000</span><span class="p">,</span>
+        <span class="n">new_after_n_chars</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3800</span><span class="p">,</span>
+        <span class="n">combine_text_under_n_chars</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2000</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize chunking parameters&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_single_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_path</span><span class="p">,</span> <span class="n">project_name</span><span class="p">,</span> <span class="n">doc_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process DI result JSON&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_extract_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tables</span><span class="p">,</span> <span class="n">page_offset</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract table content&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p><strong>Output Format:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;chunk_id&quot;</span><span class="p">:</span> <span class="s2">&quot;spec_p3_t1704067200000&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;Section heading: paragraph text...&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;source_document&quot;</span><span class="p">:</span> <span class="s2">&quot;specification.pdf&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;project_name&quot;</span><span class="p">:</span> <span class="s2">&quot;Transformer_A&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="mi">3</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>See: <span class="xref std std-doc">modules/chunking</span> for complete documentation</p>
+</section>
+<section id="doc-filling-blob-py">
+<h3>doc_filling_blob.py<a class="headerlink" href="#doc-filling-blob-py" title="Link to this heading"></a></h3>
+<p><strong>Document Template Filling</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">docx</span><span class="w"> </span><span class="kn">import</span> <span class="n">Document</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">docx.shared</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pt</span><span class="p">,</span> <span class="n">RGBColor</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">DocumentFiller</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize document filler&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fill_template</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">template_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">parameters</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+        <span class="n">output_path</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fill template with parameters&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract parameters from JSON&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">upload_to_blob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">local_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">blob_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Upload generated document&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p><strong>Template Variables:</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>{{TRANSFORMER_NAME}}
+{{RATED_VOLTAGE}}
+{{RATED_CAPACITY}}
+{{COOLING_METHOD}}
+{{VECTOR_GROUP}}
+{{IMPEDANCE}}
+{{FREQUENCY}}
+{{EFFICIENCY}}
+</pre></div>
+</div>
+</section>
+<section id="docflow-chatui-jsx">
+<h3>Docflow_chatui.jsx<a class="headerlink" href="#docflow-chatui-jsx" title="Link to this heading"></a></h3>
+<p><strong>React Chat Interface</strong></p>
+<div class="highlight-jsx notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="nx">React</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">useState</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;react&#39;</span><span class="p">;</span>
+<span class="k">import</span><span class="w"> </span><span class="nx">axios</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;axios&#39;</span><span class="p">;</span>
+
+<span class="kd">function</span><span class="w"> </span><span class="nx">DocflowChatUI</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">messages</span><span class="p">,</span><span class="w"> </span><span class="nx">setMessages</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useState</span><span class="p">([]);</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">input</span><span class="p">,</span><span class="w"> </span><span class="nx">setInput</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useState</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">projectFolder</span><span class="p">,</span><span class="w"> </span><span class="nx">setProjectFolder</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useState</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">handleSendMessage</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Send query to backend</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">axios</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/query&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">question</span><span class="o">:</span><span class="w"> </span><span class="nx">input</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">project_folder</span><span class="o">:</span><span class="w"> </span><span class="nx">projectFolder</span>
+<span class="w">        </span><span class="p">});</span>
+
+<span class="w">        </span><span class="c1">// Display response</span>
+<span class="w">        </span><span class="nx">setMessages</span><span class="p">([...</span><span class="nx">messages</span><span class="p">,</span><span class="w"> </span><span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">]);</span>
+<span class="w">    </span><span class="p">};</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">handleFileUpload</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="nx">files</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">// Upload files to backend</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">formData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">FormData</span><span class="p">();</span>
+<span class="w">        </span><span class="nx">formData</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="s1">&#39;project_folder&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">projectFolder</span><span class="p">);</span>
+<span class="w">        </span><span class="nx">files</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">file</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">formData</span><span class="p">.</span><span class="nx">append</span><span class="p">(</span><span class="s1">&#39;files&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">file</span><span class="p">));</span>
+
+<span class="w">        </span><span class="k">await</span><span class="w"> </span><span class="nx">axios</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/upload&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">formData</span><span class="p">);</span>
+<span class="w">    </span><span class="p">};</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">(</span>
+<span class="w">        </span><span class="p">&lt;</span><span class="nt">div</span><span class="p">&gt;</span>
+<span class="w">            </span><span class="p">&lt;</span><span class="nt">ChatMessages</span><span class="w"> </span><span class="na">messages</span><span class="o">=</span><span class="p">{</span><span class="nx">messages</span><span class="p">}</span><span class="w"> </span><span class="p">/&gt;</span>
+<span class="w">            </span><span class="p">&lt;</span><span class="nt">FileUpload</span><span class="w"> </span><span class="na">onUpload</span><span class="o">=</span><span class="p">{</span><span class="nx">handleFileUpload</span><span class="p">}</span><span class="w"> </span><span class="p">/&gt;</span>
+<span class="w">            </span><span class="p">&lt;</span><span class="nt">InputBox</span><span class="w"> </span><span class="na">value</span><span class="o">=</span><span class="p">{</span><span class="nx">input</span><span class="p">}</span><span class="w"> </span><span class="na">onChange</span><span class="o">=</span><span class="p">{</span><span class="nx">setInput</span><span class="p">}</span><span class="w"> </span><span class="na">onSend</span><span class="o">=</span><span class="p">{</span><span class="nx">handleSendMessage</span><span class="p">}</span><span class="w"> </span><span class="p">/&gt;</span>
+<span class="w">        </span><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+<span class="w">    </span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="index-html">
+<h3>Index.HTML<a class="headerlink" href="#index-html" title="Link to this heading"></a></h3>
+<p><strong>Frontend HTML Structure</strong></p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="p">&lt;</span><span class="nt">html</span> <span class="na">lang</span><span class="o">=</span><span class="s">&quot;en&quot;</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">charset</span><span class="o">=</span><span class="s">&quot;UTF-8&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">meta</span> <span class="na">name</span><span class="o">=</span><span class="s">&quot;viewport&quot;</span> <span class="na">content</span><span class="o">=</span><span class="s">&quot;width=device-width, initial-scale=1.0&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>Transformer Spec RAG<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">link</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;stylesheet&quot;</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;styles.css&quot;</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">div</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;root&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;react.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;app.js&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading"></a></h2>
+<p><strong>Required Packages</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># FastAPI &amp; Web</span>
+fastapi&gt;<span class="o">=</span><span class="m">0</span>.104.0
+uvicorn<span class="o">[</span>standard<span class="o">]</span>&gt;<span class="o">=</span><span class="m">0</span>.24.0
+
+<span class="c1"># Azure Services</span>
+azure-storage-blob&gt;<span class="o">=</span><span class="m">12</span>.18.0
+azure-ai-formrecognizer&gt;<span class="o">=</span><span class="m">3</span>.3.0
+
+<span class="c1"># Vector Search &amp; ML</span>
+faiss-cpu&gt;<span class="o">=</span><span class="m">1</span>.7.4
+openai&gt;<span class="o">=</span><span class="m">1</span>.3.0
+rank-bm25&gt;<span class="o">=</span><span class="m">0</span>.2.0
+sentence-transformers&gt;<span class="o">=</span><span class="m">2</span>.0.0
+
+<span class="c1"># Document Processing</span>
+pdf2image&gt;<span class="o">=</span><span class="m">1</span>.16.0
+PyPDF2&gt;<span class="o">=</span><span class="m">3</span>.0.0
+python-docx&gt;<span class="o">=</span><span class="m">0</span>.8.11
+
+<span class="c1"># Utilities</span>
+numpy&gt;<span class="o">=</span><span class="m">1</span>.24.0
+python-dotenv&gt;<span class="o">=</span><span class="m">1</span>.0.0
+tiktoken&gt;<span class="o">=</span><span class="m">0</span>.5.0
+</pre></div>
+</div>
+</section>
+<section id="configuration-files">
+<h2>Configuration Files<a class="headerlink" href="#configuration-files" title="Link to this heading"></a></h2>
+<p><strong>.env Template</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Azure Services</span>
+<span class="nv">AZURE_STORAGE_CONNECTION_STRING</span><span class="o">=</span>...
+
+<span class="c1"># OpenAI</span>
+<span class="nv">OPENAI_KEY</span><span class="o">=</span>...
+<span class="nv">OPENAI_ENDPOINT</span><span class="o">=</span>...
+<span class="nv">CHAT_MODEL</span><span class="o">=</span>gpt-4o
+
+<span class="c1"># FAISS Search</span>
+<span class="nv">BLOB_INDEX_CONTAINER</span><span class="o">=</span>faiss-indexes
+<span class="nv">BLOB_METADATA_CONTAINER</span><span class="o">=</span>faiss-metadata
+<span class="nv">VECTOR_SEARCH_K</span><span class="o">=</span><span class="m">20</span>
+<span class="nv">RERANK_TOP_K</span><span class="o">=</span><span class="m">10</span>
+<span class="nv">BM25_WEIGHT</span><span class="o">=</span><span class="m">0</span>.4
+<span class="nv">VECTOR_WEIGHT</span><span class="o">=</span><span class="m">0</span>.6
+
+<span class="c1"># Application</span>
+<span class="nv">API_KEY</span><span class="o">=</span>...
+<span class="nv">DEBUG</span><span class="o">=</span><span class="nb">false</span>
+</pre></div>
+</div>
+</section>
+<section id="data-flow">
+<h2>Data Flow<a class="headerlink" href="#data-flow" title="Link to this heading"></a></h2>
+<p><strong>Complete Pipeline with Source Code</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>User Input (Docflow_chatui.jsx)
+          ↓
+FastAPI (app.py)
+          ↓
+doc_extraction_using_di.py (if upload)
+          ↓
+chunk_by_title_semantic_blob.py (if chunking)
+          ↓
+rag_query.py (Core Query Engine)
+   ├─ FAISS search
+   ├─ BM25 search
+   ├─ CrossEncoder reranking
+   └─ GPT-4 generation
+          ↓
+doc_filling_blob.py (if generation)
+          ↓
+FastAPI (app.py)
+          ↓
+Response to Frontend
+</pre></div>
+</div>
+</section>
+<section id="key-implementation-details">
+<h2>Key Implementation Details<a class="headerlink" href="#key-implementation-details" title="Link to this heading"></a></h2>
+<p><strong>FAISS Integration (rag_query.py)</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">faiss</span>
+
+<span class="c1"># Load FAISS index</span>
+<span class="n">index</span> <span class="o">=</span> <span class="n">faiss</span><span class="o">.</span><span class="n">read_index</span><span class="p">(</span><span class="s2">&quot;index.faiss&quot;</span><span class="p">)</span>
+
+<span class="c1"># Search</span>
+<span class="n">distances</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">query_vector</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+
+<span class="c1"># Results</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+    <span class="n">chunk</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Score: </span><span class="si">{</span><span class="n">distances</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Content: </span><span class="si">{</span><span class="n">chunk</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Hybrid Search (rag_query.py)</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Vector search</span>
+<span class="n">vector_scores</span> <span class="o">=</span> <span class="n">faiss_search</span><span class="p">(</span><span class="n">query_embedding</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+
+<span class="c1"># Keyword search</span>
+<span class="n">bm25_scores</span> <span class="o">=</span> <span class="n">bm25</span><span class="o">.</span><span class="n">get_scores</span><span class="p">(</span><span class="n">query</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+
+<span class="c1"># Combine with weights</span>
+<span class="n">final_scores</span> <span class="o">=</span> <span class="n">BM25_WEIGHT</span> <span class="o">*</span> <span class="n">bm25_scores</span> <span class="o">+</span> <span class="n">VECTOR_WEIGHT</span> <span class="o">*</span> <span class="n">vector_scores</span>
+
+<span class="c1"># Rerank with CrossEncoder</span>
+<span class="n">cross_scores</span> <span class="o">=</span> <span class="n">crossencoder</span><span class="o">.</span><span class="n">predict</span><span class="p">([(</span><span class="n">query</span><span class="p">,</span> <span class="n">chunk</span><span class="p">)</span> <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">top_chunks</span><span class="p">])</span>
+</pre></div>
+</div>
+<p><strong>RAG Generation (rag_query.py)</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Build context</span>
+<span class="n">context</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">chunk</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">top_chunks</span><span class="p">])</span>
+
+<span class="c1"># Generate with GPT-4</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">chat</span><span class="o">.</span><span class="n">completions</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">,</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;system&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;You are a transformer expert...&quot;</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Context:</span><span class="se">\n</span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">Question: </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">}</span>
+    <span class="p">],</span>
+    <span class="n">temperature</span><span class="o">=</span><span class="mf">0.3</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="module-relationships">
+<h2>Module Relationships<a class="headerlink" href="#module-relationships" title="Link to this heading"></a></h2>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>app.py (Entry Point)
+├── Calls: doc_extraction_using_di.py
+│   └── Outputs: DI JSON
+│
+├── Calls: chunk_by_title_semantic_blob.py
+│   └── Outputs: Chunks JSON
+│
+├── Calls: rag_query.py (CORE)
+│   ├── Uses: FAISS
+│   ├── Uses: BM25
+│   ├── Uses: CrossEncoder
+│   └── Uses: OpenAI GPT-4
+│
+└── Calls: doc_filling_blob.py
+    └── Outputs: .docx file
+</pre></div>
+</div>
+</section>
+<section id="development-tips">
+<h2>Development Tips<a class="headerlink" href="#development-tips" title="Link to this heading"></a></h2>
+<p><strong>Debugging rag_query.py</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Enable verbose logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+
+<span class="c1"># Test individual components</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rag_query</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">search_faiss</span><span class="p">,</span>
+    <span class="n">search_bm25</span><span class="p">,</span>
+    <span class="n">rerank_with_crossencoder</span><span class="p">,</span>
+    <span class="n">generate_with_gpt4</span>
+<span class="p">)</span>
+
+<span class="c1"># Test FAISS search</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">search_faiss</span><span class="p">(</span><span class="n">query_embedding</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FAISS results: </span><span class="si">{</span><span class="n">results</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Test BM25</span>
+<span class="n">scores</span> <span class="o">=</span> <span class="n">search_bm25</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;BM25 scores: </span><span class="si">{</span><span class="n">scores</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Testing API Endpoints</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Health check</span>
+curl<span class="w"> </span>http://localhost:8000/health
+
+<span class="c1"># Query</span>
+curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:8000/query<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;X-API-Key: your_key&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;question&quot;: &quot;What is the voltage?&quot;, &quot;project_folder&quot;: &quot;ProjectA&quot;}&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="performance-considerations">
+<h2>Performance Considerations<a class="headerlink" href="#performance-considerations" title="Link to this heading"></a></h2>
+<p><strong>rag_query.py Optimization</strong></p>
+<ul class="simple">
+<li><p>FAISS search: ~100ms for 1M vectors</p></li>
+<li><p>BM25 search: ~10ms for 10K documents</p></li>
+<li><p>CrossEncoder reranking: ~50ms for 20 chunks</p></li>
+<li><p>GPT-4 generation: ~2-5 seconds</p></li>
+</ul>
+<p><strong>Tuning for Speed</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Faster</span>
+<span class="n">RETRIEVAL_K</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">RERANK_TOP_K</span> <span class="o">=</span> <span class="mi">3</span>
+
+<span class="c1"># More thorough</span>
+<span class="n">RETRIEVAL_K</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">RERANK_TOP_K</span> <span class="o">=</span> <span class="mi">20</span>
+</pre></div>
+</div>
+</section>
+<section id="next-steps">
+<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><span class="xref std std-doc">modules/rag_query</span> - Complete RAG module documentation</p></li>
+<li><p><span class="xref std std-doc">api/endpoints</span> - API implementation</p></li>
+<li><p><a class="reference internal" href="architecture.html"><span class="doc">Architecture</span></a> - System overview</p></li>
+<li><p><a class="reference internal" href="quickstart.html"><span class="doc">Quick Start</span></a> - Get started</p></li>
+</ul>
+<p>All source code is included in the project and fully documented!</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Your Team.
+      <span class="lastupdated">Last updated on Mar 11, 2026.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

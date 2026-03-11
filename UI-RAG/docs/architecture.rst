@@ -27,7 +27,7 @@ The system consists of three main layers:
             ▼                  ▼                  ▼
     ┌──────────────────┐ ┌───────────────────┐ ┌────────────────┐
     │ Azure Services   │ │ Vector Database   │ │ Storage Layer  │
-    │ - DI (Extract)   │ │ - AI Search       │ │ - Blob Storage │
+    │ - DI (Extract)   │ │                 │ │ - Blob Storage │
     │ - OpenAI (RAG)   │ │ - FAISS (Local)   │ │ - Containers   │
     └──────────────────┘ └───────────────────┘ └────────────────┘
 
@@ -40,7 +40,7 @@ When a user uploads documents:
 
 .. code-block:: text
 
-    Upload File (PDF/DOCX/XLSX)
+    Upload File (PDF)
              ↓
     FastAPI Endpoint validates
              ↓
@@ -49,7 +49,7 @@ When a user uploads documents:
     Upload to Azure Blob Storage
 
 **File Validation:**
-- Extension check (.pdf, .docx, .xlsx)
+- Extension check (.pdf)
 - Size validation (max 100 MB)
 - Content type verification
 - Duplicate detection (MD5 hash)
@@ -204,7 +204,7 @@ When user asks a question:
 
 .. code-block:: text
 
-    User Question: "What is the transformer voltage?"
+    User Question: "Generate order design documents"
          ↓
     Convert to embedding (same model as chunks)
          ↓
@@ -238,10 +238,9 @@ Uses OpenAI GPT-4 to synthesize answer:
          ↓
     OpenAI GPT-4 Processing
          ↓
-    Generated Response:
-    "Based on the specifications, the transformer is rated
-     for 400 kV nominal voltage with operating range of
-     380-420 kV as per document section 2.3..."
+    Generated results as JSON
+         ↓
+     Json used to fill documents
          ↓
     Return to user
 
@@ -296,7 +295,7 @@ Complete data journey through the system:
 
     ┌──────────────────┐
     │  User Upload     │
-    │   PDF/DOCX       │
+    │      PDF         │
     └────────┬─────────┘
              │
              ▼
@@ -344,30 +343,33 @@ Complete data journey through the system:
              │
              ▼
     ┌──────────────────────────┐
-    │  Index in Azure AI Search│
+    │  Index in FAISS          │
+    │    (stored in blob       │
     │  - Store vectors         │
     │  - Index metadata        │
     └────────┬─────────────────┘
              │
-             ▼ (Ready for queries)
+             ▼ (Ready for document generation)
     
     ┌──────────────────────────┐
     │  User Question           │
-    │  (Chat Interface)        │
+    │ (Generate order document)│
     └────────┬─────────────────┘
              │
              ▼
     ┌──────────────────────────┐
-    │  Embed Query             │
+    │  Embed Queries           │
     │  (Same embedding model)  │
     └────────┬─────────────────┘
              │
              ▼
     ┌──────────────────────────┐
-    │  Semantic Search         │
-    │  (AI Search Index)       │
+    │  Semantic+keyword search │
+    │  (FAISS Search Index)    │
     │  - Top-K retrieval       │
     │  - Metadata filtering    │
+    │  - CrossEncoder reranking│
+    │   for relevance          │
     └────────┬─────────────────┘
              │
              ▼
@@ -405,28 +407,28 @@ Database & Storage Architecture
 
     storage-account/
     ├── transformer-input/              # Raw uploads
-    │   ├── ProjectA_onshore/
+    │   ├── ProjectA/
     │   │   ├── spec1.pdf
     │   │   ├── spec2.docx
     │   │   └── data.xlsx
-    │   └── ProjectB_offshore/
+    │   └── ProjectB/
     │       └── spec.pdf
     │
     ├── output-of-di/                   # DI extraction results
-    │   ├── ProjectA_onshore/
+    │   ├── ProjectA/
     │   │   ├── spec1_di_result.json
     │   │   └── spec2_di_result.json
-    │   └── ProjectB_offshore/
+    │   └── ProjectB/
     │       └── spec_di_result.json
     │
     ├── chunked-output/                 # Chunked documents
     │   └── all_chunks.json             # All chunks + metadata
     │
     ├── order-design-documents/         # Generated documents
-    │   ├── ProjectA_onshore/
+    │   ├── ProjectA/
     │   │   ├── Order_A_unit1.docx
     │   │   └── Order_B_unit1.docx
-    │   └── ProjectB_offshore/
+    │   └── ProjectB/
     │       └── Order_A_unit1.docx
     │
     ├── order-templates/                # Document templates
@@ -442,16 +444,12 @@ Database & Storage Architecture
 
     storage-account/
     ├── faiss-indexes/                  ← FAISS vector indexes
-    │   ├── ProjectA_onshore.index
-    │   ├── ProjectA_offshore.index
-    │   ├── ProjectB_onshore.index
-    │   └── ProjectB_offshore.index
+    │   ├── docs.index
+    │  
     │
     └── faiss-metadata/                 ← Chunk metadata for lookup
-        ├── ProjectA_onshore_metadata.json
-        ├── ProjectA_offshore_metadata.json
-        ├── ProjectB_onshore_metadata.json
-        └── ProjectB_offshore_metadata.json
+        ├── docs.pkl
+        
 
 **FAISS Index Format**
 
@@ -577,55 +575,6 @@ Scalability Considerations
 - Index query caching
 - Async/await for I/O operations
 
-Security Architecture
-=====================
-
-**Layer-Based Security**
-
-.. code-block:: text
-
-    Network Layer
-    ├── HTTPS/TLS encryption
-    ├── CORS policy enforcement
-    └── Rate limiting
-    
-    Application Layer
-    ├── API key validation
-    ├── Input validation
-    ├── SQL injection prevention
-    └── XSS protection
-    
-    Data Layer
-    ├── Azure Storage encryption
-    ├── Azure AI Search security
-    ├── Credential management
-    └── Access control
-
-**Secrets Management**
-- Use Azure Key Vault (production)
-- .env files (development only)
-- Never commit secrets
-- Rotate credentials regularly
-
-Module Dependencies
-===================
-
-.. code-block:: text
-
-    app.py (main)
-    ├── doc_extraction_using_di.py
-    │   ├── azure.ai.formrecognizer
-    │   ├── pdf2image
-    │   └── PyPDF2
-    │
-    ├── chunk_by_title_semantic_blob.py
-    │   └── tiktoken
-    │
-    ├── rag_query.py
-    │   └── openai
-    │
-    └── doc_filling_blob.py
-        └── python-docx
 
 Deployment Architecture
 =======================

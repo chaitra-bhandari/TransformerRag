@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Troubleshooting &mdash; Transformer Spec RAG 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=8d563738"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="rag_query module" href="rag_query.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Transformer Spec RAG
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Architecture &amp; Design</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">UI-RAG</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Support</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#general-troubleshooting-steps">General Troubleshooting Steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation-issues">Installation Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-issues">Configuration Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#azure-authentication-issues">Azure Authentication Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#api-backend-issues">API &amp; Backend Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#document-processing-issues">Document Processing Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#query-rag-issues">Query &amp; RAG Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#performance-issues">Performance Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#frontend-issues">Frontend Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-more-help">Getting More Help</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Transformer Spec RAG</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Troubleshooting</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/troubleshooting.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="troubleshooting">
+<h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h1>
+<p>Solutions to common issues.</p>
+<section id="general-troubleshooting-steps">
+<h2>General Troubleshooting Steps<a class="headerlink" href="#general-troubleshooting-steps" title="Link to this heading"></a></h2>
+<p><strong>1. Check Logs</strong></p>
+<p>Look for error messages in console output:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Backend logs</span>
+uvicorn<span class="w"> </span>app:app<span class="w"> </span>--reload
+
+<span class="c1"># Check .env file is loaded</span>
+<span class="nb">echo</span><span class="w"> </span><span class="nv">$AZURE_STORAGE_CONNECTION_STRING</span>
+</pre></div>
+</div>
+<p><strong>2. Verify Configuration</strong></p>
+<p>Ensure .env file has all required variables:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cat<span class="w"> </span>.env
+</pre></div>
+</div>
+<p>Required variables:
+- AZURE_STORAGE_CONNECTION_STRING
+- AZURE_DI_ENDPOINT &amp; AZURE_DI_API_KEY
+- AZURE_SEARCH_ENDPOINT &amp; AZURE_SEARCH_KEY
+- OPENAI_KEY
+- API_KEY</p>
+<p><strong>3. Test Connectivity</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Test backend</span>
+curl<span class="w"> </span>http://localhost:8000/health
+
+<span class="c1"># Should return: {&quot;status&quot;: &quot;healthy&quot;}</span>
+</pre></div>
+</div>
+<p><strong>4. Check Azure Services</strong></p>
+<p>Verify all Azure resources are running and accessible:</p>
+<ol class="arabic simple">
+<li><p>Azure Portal → Your resources</p></li>
+<li><p>Check Status column</p></li>
+<li><p>Verify quotas not exceeded</p></li>
+</ol>
+<p><strong>5. Review Recent Changes</strong></p>
+<p>If it worked before:
+- What changed in .env?
+- Was code updated?
+- Did Azure credentials rotate?</p>
+</section>
+<section id="installation-issues">
+<h2>Installation Issues<a class="headerlink" href="#installation-issues" title="Link to this heading"></a></h2>
+<p><strong>Problem: “ModuleNotFoundError: No module named ‘fastapi’”</strong></p>
+<p>You likely skipped pip install or virtual environment not activated.</p>
+<p><strong>Solution:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Activate virtual environment</span>
+<span class="nb">source</span><span class="w"> </span>venv/bin/activate<span class="w">  </span><span class="c1"># macOS/Linux</span>
+<span class="c1"># or</span>
+venv<span class="se">\S</span>cripts<span class="se">\a</span>ctivate<span class="w">     </span><span class="c1"># Windows</span>
+
+<span class="c1"># Install dependencies</span>
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+</pre></div>
+</div>
+<p><strong>Problem: “pip: command not found”</strong></p>
+<p>Python not installed or not in PATH.</p>
+<p><strong>Solution:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check Python installation</span>
+python<span class="w"> </span>--version
+python3<span class="w"> </span>--version
+
+<span class="c1"># Use python -m pip</span>
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>pip
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+</pre></div>
+</div>
+<p><strong>Problem: “No module named azure”</strong></p>
+<p>Azure SDK not installed.</p>
+<p><strong>Solution:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>azure-storage-blob<span class="w"> </span>azure-ai-formrecognizer<span class="w"> </span>azure-search-documents
+</pre></div>
+</div>
+<p><strong>Problem: “ImportError: cannot import name ‘BlobServiceClient’”</strong></p>
+<p>Wrong SDK version or incomplete installation.</p>
+<p><strong>Solution:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>azure-storage-blob
+pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>azure-ai-formrecognizer
+</pre></div>
+</div>
+</section>
+<section id="configuration-issues">
+<h2>Configuration Issues<a class="headerlink" href="#configuration-issues" title="Link to this heading"></a></h2>
+<p><strong>Problem: “ERROR: Missing required environment variable: AZURE_DI_API_KEY”</strong></p>
+<p>Missing or incorrect environment variable.</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Check .env file exists in project root</p></li>
+<li><p>Verify variable name is correct: <code class="docutils literal notranslate"><span class="pre">AZURE_DI_API_KEY</span></code> (case-sensitive)</p></li>
+<li><p>Verify value is not empty</p></li>
+<li><p>Don’t use quotes around the value</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Correct</span>
+<span class="nv">AZURE_DI_API_KEY</span><span class="o">=</span>abc123xyz
+
+<span class="c1"># Wrong</span>
+<span class="nv">AZURE_DI_API_KEY</span><span class="o">=</span><span class="s2">&quot;abc123xyz&quot;</span>
+</pre></div>
+</div>
+<p><strong>Problem: “Invalid connection string”</strong></p>
+<p>Malformed Azure Storage connection string.</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Go to Azure Portal → Storage Account → Access Keys</p></li>
+<li><p>Copy the full Connection String (not just the key)</p></li>
+<li><p>Should contain: <code class="docutils literal notranslate"><span class="pre">DefaultEndpointsProtocol=https;...</span></code></p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example format</span>
+<span class="nv">AZURE_STORAGE_CONNECTION_STRING</span><span class="o">=</span><span class="nv">DefaultEndpointsProtocol</span><span class="o">=</span>https<span class="p">;</span><span class="nv">AccountName</span><span class="o">=</span>myaccount<span class="p">;</span><span class="nv">AccountKey</span><span class="o">=</span>mykey<span class="p">;</span><span class="nv">EndpointSuffix</span><span class="o">=</span>core.windows.net
+</pre></div>
+</div>
+<p><strong>Problem: “Failed to parse host/port from Endpoint URL”</strong></p>
+<p>Incorrect Azure endpoint URL format.</p>
+<p><strong>Solution:</strong></p>
+<p>URLs must be in correct format:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Document Intelligence - correct</span>
+<span class="nv">AZURE_DI_ENDPOINT</span><span class="o">=</span>https://eastus.api.cognitive.microsoft.com/
+
+<span class="c1"># Wrong - missing trailing slash or wrong region</span>
+<span class="nv">AZURE_DI_ENDPOINT</span><span class="o">=</span>https://eastus.api.cognitive.microsoft.com
+
+<span class="c1"># Search Service - correct</span>
+<span class="nv">AZURE_SEARCH_ENDPOINT</span><span class="o">=</span>https://myservice.search.windows.net/
+</pre></div>
+</div>
+</section>
+<section id="azure-authentication-issues">
+<h2>Azure Authentication Issues<a class="headerlink" href="#azure-authentication-issues" title="Link to this heading"></a></h2>
+<p><strong>Problem: “AuthenticationError: Invalid credentials”</strong></p>
+<p>Azure credentials invalid or expired.</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Verify API key hasn’t been regenerated</p></li>
+<li><p>Check key is for correct service</p></li>
+<li><p>Verify endpoint matches key’s region</p></li>
+<li><p>Try regenerating key:
+- Azure Portal → Keys and Endpoints
+- Click regenerate button
+- Update .env file</p></li>
+</ol>
+<p><strong>Problem: “Access denied” when accessing blob storage</strong></p>
+<p>Storage account key invalid or insufficient permissions.</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Verify connection string is current:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Azure Portal → Storage Account → Access Keys</span>
+<span class="c1"># Copy &quot;Connection string&quot; (full string)</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Check storage account allows access:
+- Storage Account → Firewalls and Virtual Networks
+- Should allow “All networks” (or your IP)</p></li>
+<li><p>Verify containers exist:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># List containers</span>
+az<span class="w"> </span>storage<span class="w"> </span>container<span class="w"> </span>list<span class="w"> </span>--connection-string<span class="w"> </span><span class="s2">&quot;your_connection_string&quot;</span>
+</pre></div>
+</div>
+<p><strong>Problem: “Unauthorized” on Document Intelligence calls</strong></p>
+<p>DI API key or endpoint incorrect.</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Verify API key:
+- Azure Portal → Document Intelligence resource
+- Keys and Endpoints tab
+- Copy primary or secondary key</p></li>
+<li><p>Verify endpoint:
+- Format: <a class="reference external" href="https://REGION.api.cognitive.microsoft.com/">https://REGION.api.cognitive.microsoft.com/</a>
+- Replace REGION with your deployment region (e.g., eastus)</p></li>
+<li><p>Verify API version compatibility:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check API version in code</span>
+<span class="c1"># Should use &quot;2023-10-31-preview&quot; or later</span>
+<span class="nv">poller</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>client.begin_analyze_document<span class="o">(</span><span class="s2">&quot;prebuilt-layout&quot;</span>,<span class="w"> </span>...<span class="o">)</span>
+</pre></div>
+</div>
+<p><strong>Problem: “Index not found” on AI Search queries</strong></p>
+<p>Search index not created or name mismatch.</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Verify index name in .env:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">AZURE_SEARCH_INDEX</span><span class="o">=</span>transformer-chunks
+<span class="c1"># Must match exactly</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Create index if doesn’t exist:
+- Upload document to trigger index creation
+- Or run chunking script first</p></li>
+<li><p>Check AI Search is accessible:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">azure.search.documents</span><span class="w"> </span><span class="kn">import</span> <span class="n">SearchClient</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">SearchClient</span><span class="p">(</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">index_name</span><span class="p">,</span> <span class="n">AzureKeyCredential</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;*&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Index has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">results</span><span class="p">))</span><span class="si">}</span><span class="s2"> documents&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="api-backend-issues">
+<h2>API &amp; Backend Issues<a class="headerlink" href="#api-backend-issues" title="Link to this heading"></a></h2>
+<p><strong>Problem: “Connection refused” on localhost:8000</strong></p>
+<p>Backend not running.</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Start backend:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>uvicorn<span class="w"> </span>app:app<span class="w"> </span>--reload
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Should see:
+- “Uvicorn running on <a class="reference external" href="http://0.0.0.0:8000">http://0.0.0.0:8000</a>”
+- “Application startup complete”</p></li>
+<li><p>Verify port 8000 is free:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check what&#39;s using port 8000</span>
+<span class="c1"># macOS/Linux</span>
+lsof<span class="w"> </span>-i<span class="w"> </span>:8000
+
+<span class="c1"># Windows</span>
+netstat<span class="w"> </span>-ano<span class="w"> </span><span class="p">|</span><span class="w"> </span>findstr<span class="w"> </span>:8000
+</pre></div>
+</div>
+<p><strong>Problem: “401 Unauthorized” on API calls</strong></p>
+<p>Missing or invalid API key.</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Include X-API-Key header:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;X-API-Key: your_api_key&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">     </span>http://localhost:8000/query
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Verify API_KEY in .env:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cat<span class="w"> </span>.env<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>API_KEY
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Restart backend after changing .env:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Stop current process (Ctrl+C)</span>
+<span class="c1"># Start again</span>
+uvicorn<span class="w"> </span>app:app<span class="w"> </span>--reload
+</pre></div>
+</div>
+<p><strong>Problem: “413 Payload Too Large”</strong></p>
+<p>File exceeds maximum size (100 MB).</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Check file size:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># macOS/Linux</span>
+ls<span class="w"> </span>-lh<span class="w"> </span>document.pdf
+
+<span class="c1"># Windows</span>
+dir<span class="w"> </span>document.pdf
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Split large files:
+- Split PDF into multiple documents
+- Remove unnecessary pages
+- Compress before uploading</p></li>
+<li><p>Increase limit if needed:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># In app.py</span>
+<span class="n">MAX_FILE_SIZE_MB</span> <span class="o">=</span> <span class="mi">200</span>  <span class="c1"># Increase limit</span>
+</pre></div>
+</div>
+<p><strong>Problem: “415 Unsupported Media Type”</strong></p>
+<p>File format not supported.</p>
+<p><strong>Solution:</strong></p>
+<p>Supported formats: .pdf, .docx, .xlsx</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check file extension</span>
+file<span class="w"> </span>document.pdf
+
+<span class="c1"># Rename if needed</span>
+mv<span class="w"> </span>document.doc<span class="w"> </span>document.docx
+</pre></div>
+</div>
+<p><strong>Problem: Endpoint “/docs” returns 404</strong></p>
+<p>Swagger UI not available (production mode?).</p>
+<p><strong>Solution:</strong></p>
+<p>Swagger UI is available in development mode:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make sure running with --reload</span>
+uvicorn<span class="w"> </span>app:app<span class="w"> </span>--reload
+
+<span class="c1"># Then visit http://localhost:8000/docs</span>
+</pre></div>
+</div>
+</section>
+<section id="document-processing-issues">
+<h2>Document Processing Issues<a class="headerlink" href="#document-processing-issues" title="Link to this heading"></a></h2>
+<p><strong>Problem: “Image pages detected” but document is text-based</strong></p>
+<p>PDF is scanned or image-heavy.</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Check if PDF is truly text-based:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Try extracting text from first page</span>
+pdftotext<span class="w"> </span>document.pdf<span class="w"> </span>-
+<span class="c1"># If empty, it&#39;s scanned</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Solution options:
+- Use original digital PDF if available
+- OCR the scanned PDF first
+- Extract images manually</p></li>
+</ol>
+<p><strong>Problem: “No chunks created” after upload</strong></p>
+<p>Document extraction failed or noise filters too aggressive.</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Check DI result JSON:
+- Navigate to output-of-di container
+- View the _di_result.json file
+- Verify paragraphs and tables extracted</p></li>
+<li><p>Check if document is valid:
+- Open with PDF reader
+- Verify text is extractable
+- Check for password protection</p></li>
+<li><p>Adjust chunking parameters:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">chunker</span> <span class="o">=</span> <span class="n">DocumentChunker</span><span class="p">(</span>
+    <span class="n">min_tokens</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>  <span class="c1"># Lower threshold</span>
+    <span class="n">combine_text_under_n_chars</span><span class="o">=</span><span class="mi">1000</span>  <span class="c1"># Merge smaller chunks</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Problem: Chunks too small or too large</strong></p>
+<p>Chunking parameters need adjustment.</p>
+<p><strong>Solution:</strong></p>
+<p>Adjust parameters in DocumentChunker:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># For larger chunks (more context)</span>
+<span class="n">chunker</span> <span class="o">=</span> <span class="n">DocumentChunker</span><span class="p">(</span>
+    <span class="n">max_characters</span><span class="o">=</span><span class="mi">8000</span><span class="p">,</span>
+    <span class="n">new_after_n_chars</span><span class="o">=</span><span class="mi">7500</span><span class="p">,</span>
+    <span class="n">combine_text_under_n_chars</span><span class="o">=</span><span class="mi">3000</span>
+<span class="p">)</span>
+
+<span class="c1"># For smaller chunks (more granular)</span>
+<span class="n">chunker</span> <span class="o">=</span> <span class="n">DocumentChunker</span><span class="p">(</span>
+    <span class="n">max_characters</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span>
+    <span class="n">new_after_n_chars</span><span class="o">=</span><span class="mi">1800</span><span class="p">,</span>
+    <span class="n">combine_text_under_n_chars</span><span class="o">=</span><span class="mi">1000</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Problem: Tables not extracted correctly</strong></p>
+<p>Table detection or formatting issue.</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Check DI detected tables:
+- Look in DI result JSON
+- Search for “tables” section
+- Verify cells are present</p></li>
+<li><p>Complex tables:
+- Merged cells may cause issues
+- Very wide tables may not format well
+- Consider manual extraction</p></li>
+</ol>
+<p><strong>Problem: Duplicate documents being processed</strong></p>
+<p>Duplicate detection not working.</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Check MD5 hash calculation:
+- Verify files are truly identical
+- Different content = different hash</p></li>
+<li><p>Clear duplicate tracker:
+- Restart the processor
+- Duplicates tracked per-run only</p></li>
+</ol>
+</section>
+<section id="query-rag-issues">
+<h2>Query &amp; RAG Issues<a class="headerlink" href="#query-rag-issues" title="Link to this heading"></a></h2>
+<p><strong>Problem: “No results” for query</strong></p>
+<p>Query didn’t match any documents.</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Verify documents are indexed:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">&quot;X-API-Key: your_key&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">     </span>http://localhost:8000/list-projects
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Check project exists:
+- Verify project_folder in request</p></li>
+<li><p>Try simpler query:
+- Shorter, more specific question
+- Include document keywords</p></li>
+</ol>
+<p><strong>Problem: Wrong or irrelevant results</strong></p>
+<p>RAG model retrieving incorrect chunks.</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Check top_k parameter:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Retrieve more chunks</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+    <span class="n">url</span><span class="p">,</span>
+    <span class="n">json</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;question&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;top_k&quot;</span><span class="p">:</span> <span class="mi">20</span>  <span class="c1"># Was 10</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Refine question:
+- More specific is better
+- Include keywords from documents
+- Ask one question at a time</p></li>
+<li><p>Check document quality:
+- Ensure source documents are clean
+- Remove noise/artifacts
+- Verify text is extractable</p></li>
+</ol>
+<p><strong>Problem: Slow response times</strong></p>
+<p>Query taking more than 5 seconds.</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Check network:
+- Azure services may be slow
+- Check Azure Portal metrics</p></li>
+<li><p>Optimize query:
+- Reduce top_k parameter
+- Use simpler questions</p></li>
+<li><p>Reduce index size:
+- Archive old documents
+- Remove duplicates
+- Split large projects</p></li>
+</ol>
+<p><strong>Problem: “Temperature” parameter not affecting responses</strong></p>
+<p>Temperature setting ignored.</p>
+<p><strong>Solution:</strong></p>
+<p>Valid range is 0.0 to 2.0:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Low temperature (more factual)</span>
+<span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="mf">0.1</span>
+
+<span class="c1"># High temperature (more creative)</span>
+<span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="mf">0.9</span>
+
+<span class="c1"># Default</span>
+<span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="mf">0.3</span>
+</pre></div>
+</div>
+</section>
+<section id="performance-issues">
+<h2>Performance Issues<a class="headerlink" href="#performance-issues" title="Link to this heading"></a></h2>
+<p><strong>Problem: Memory usage growing</strong></p>
+<p>Memory leak or large document accumulation.</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Restart application:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Stop server (Ctrl+C)</span>
+<span class="c1"># Restart</span>
+uvicorn<span class="w"> </span>app:app<span class="w"> </span>--reload
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Monitor memory:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># macOS/Linux</span>
+top<span class="w"> </span>-p<span class="w"> </span><span class="k">$(</span>pgrep<span class="w"> </span>-f<span class="w"> </span>uvicorn<span class="k">)</span>
+
+<span class="c1"># Windows</span>
+tasklist<span class="w"> </span>/v<span class="w"> </span><span class="p">|</span><span class="w"> </span>find<span class="w"> </span><span class="s2">&quot;python&quot;</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Increase available RAM or optimize:
+- Process files individually
+- Clear temporary files
+- Use chunking parameters</p></li>
+</ol>
+<p><strong>Problem: Slow document extraction</strong></p>
+<p>DI processing is slow.</p>
+<p><strong>Solution:</strong></p>
+<p>DI speed depends on:
+- File size (larger = slower)
+- Page count
+- Azure DI service load
+- Network latency</p>
+<p>Optimizations:
+- Split large documents
+- Process during off-peak hours
+- Use faster region (if available)</p>
+<p><strong>Problem: Frontend not connecting to backend</strong></p>
+<p>React app can’t reach API.</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Verify backend is running:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>http://localhost:8000/health
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Check CORS configuration:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># In app.py or .env</span>
+CORS_ORIGINS<span class="w"> </span>must<span class="w"> </span>include<span class="w"> </span>frontend<span class="w"> </span>origin
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Check frontend URL:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Frontend should be on port 3000</span>
+http://localhost:3000
+</pre></div>
+</div>
+<ol class="arabic simple" start="4">
+<li><p>Check network:</p>
+<ul class="simple">
+<li><p>Browser console (F12) for CORS errors</p></li>
+<li><p>Verify firewall allows localhost access</p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="frontend-issues">
+<h2>Frontend Issues<a class="headerlink" href="#frontend-issues" title="Link to this heading"></a></h2>
+<p><strong>Problem: “Cannot find module ‘react’”</strong></p>
+<p>React not installed.</p>
+<p><strong>Solution:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>frontend
+npm<span class="w"> </span>install
+npm<span class="w"> </span>start
+</pre></div>
+</div>
+<p><strong>Problem: Blank screen or 404 on frontend</strong></p>
+<p>React build or routing issue.</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Restart React dev server:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>frontend
+npm<span class="w"> </span>start
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Clear browser cache:
+- Open DevTools (F12)
+- Network tab → Disable cache
+- Reload page</p></li>
+<li><p>Check build:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>npm<span class="w"> </span>run<span class="w"> </span>build
+<span class="c1"># Check for errors in output</span>
+</pre></div>
+</div>
+<p><strong>Problem: Can’t upload files in web UI</strong></p>
+<p>File upload not working.</p>
+<p><strong>Solution:</strong></p>
+<ol class="arabic simple">
+<li><p>Check file size:
+- Maximum 100 MB</p></li>
+<li><p>Check file type:
+- Only .pdf, .docx, .xlsx</p></li>
+<li><p>Check API connectivity:
+- Open browser DevTools (F12)
+- Network tab
+- Look for failed requests
+- Check response status/error</p></li>
+<li><p>Check API key:
+- Verify API_KEY is set in backend
+- Check frontend is sending X-API-Key header</p></li>
+</ol>
+</section>
+<section id="getting-more-help">
+<h2>Getting More Help<a class="headerlink" href="#getting-more-help" title="Link to this heading"></a></h2>
+<p><strong>Check Documentation</strong></p>
+<ul class="simple">
+<li><p><a class="reference internal" href="quickstart.html"><span class="doc">Quick Start</span></a> - Basic setup</p></li>
+<li><p><span class="xref std std-doc">../configuration</span> - Environment setup</p></li>
+<li><p><a class="reference internal" href="installation.html"><span class="doc">Installation</span></a> - Installation help</p></li>
+<li><p><span class="xref std std-doc">../faq</span> - Common questions</p></li>
+</ul>
+<p><strong>Enable Debug Logging</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set in .env</span>
+<span class="nv">DEBUG</span><span class="o">=</span><span class="nb">true</span>
+<span class="nv">LOG_LEVEL</span><span class="o">=</span>DEBUG
+
+<span class="c1"># Restart backend</span>
+uvicorn<span class="w"> </span>app:app<span class="w"> </span>--reload<span class="w"> </span>--log-level<span class="w"> </span>debug
+</pre></div>
+</div>
+<p><strong>Check GitHub Issues</strong></p>
+<ul class="simple">
+<li><p>Search existing issues</p></li>
+<li><p>Check closed issues for solutions</p></li>
+<li><p>Open new issue with:
+- Error message
+- Steps to reproduce
+- System info (OS, Python version)
+- Configuration (without secrets)</p></li>
+</ul>
+<p><strong>Contact Support</strong></p>
+<ul class="simple">
+<li><p>Email: <a class="reference external" href="mailto:support&#37;&#52;&#48;example&#46;com">support<span>&#64;</span>example<span>&#46;</span>com</a></p></li>
+<li><p>Forum: community.example.com</p></li>
+<li><p>Chat: Discord/Slack</p></li>
+</ul>
+<p><strong>Enable Tracing</strong></p>
+<p>For complex issues:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+<span class="c1"># Now all operations show detailed logs</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="rag_query.html" class="btn btn-neutral float-left" title="rag_query module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Your Team.
+      <span class="lastupdated">Last updated on Mar 11, 2026.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

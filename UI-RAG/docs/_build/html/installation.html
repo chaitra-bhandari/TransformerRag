@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installation &mdash; Transformer Spec RAG 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=8d563738"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Quick Start" href="quickstart.html" />
+    <link rel="prev" title="Transformer Spec RAG Documentation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Transformer Spec RAG
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#check-your-python-version">Check Your Python Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-1-clone-the-repository">Step 1: Clone the Repository</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-2-create-virtual-environment">Step 2: Create Virtual Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-3-install-dependencies">Step 3: Install Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dependencies-breakdown">Dependencies Breakdown</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-4-configure-environment-variables">Step 4: Configure Environment Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-5-verify-installation">Step 5: Verify Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#step-6-start-the-application">Step 6: Start the Application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#docker-installation-optional">Docker Installation (Optional)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#troubleshooting-installation">Troubleshooting Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#next-steps">Next Steps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-help">Getting Help</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Architecture &amp; Design</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Architecture</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">UI-RAG</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Support</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Transformer Spec RAG</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Installation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
+<p>This guide walks you through setting up Transformer Spec RAG on your system.</p>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
+<p>Before you begin, ensure you have:</p>
+<ul class="simple">
+<li><p><strong>Python 3.8 or higher</strong> installed (3.11+ recommended)</p></li>
+<li><p><strong>pip</strong> package manager (comes with Python)</p></li>
+<li><p><strong>git</strong> for version control</p></li>
+<li><p><strong>Azure subscription</strong> with the following services:
+- Azure Storage Account
+- Azure Document Intelligence
+- Azure AI Search
+- Azure OpenAI (or OpenAI API key)</p></li>
+</ul>
+</section>
+<section id="check-your-python-version">
+<h2>Check Your Python Version<a class="headerlink" href="#check-your-python-version" title="Link to this heading"></a></h2>
+<p>Open a terminal and run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>--version
+<span class="c1"># or</span>
+python3<span class="w"> </span>--version
+</pre></div>
+</div>
+<p>You should see Python 3.8 or higher.</p>
+</section>
+<section id="step-1-clone-the-repository">
+<h2>Step 1: Clone the Repository<a class="headerlink" href="#step-1-clone-the-repository" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/yourorg/transformer-spec-rag.git
+<span class="nb">cd</span><span class="w"> </span>transformer-spec-rag
+</pre></div>
+</div>
+</section>
+<section id="step-2-create-virtual-environment">
+<h2>Step 2: Create Virtual Environment<a class="headerlink" href="#step-2-create-virtual-environment" title="Link to this heading"></a></h2>
+<p>Creating a virtual environment isolates your project dependencies.</p>
+<p><strong>On Windows:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>venv
+venv<span class="se">\S</span>cripts<span class="se">\a</span>ctivate
+</pre></div>
+</div>
+<p><strong>On macOS/Linux:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>venv
+<span class="nb">source</span><span class="w"> </span>venv/bin/activate
+</pre></div>
+</div>
+<p>You’ll see <code class="docutils literal notranslate"><span class="pre">(venv)</span></code> prefix in your terminal prompt when activated.</p>
+</section>
+<section id="step-3-install-dependencies">
+<h2>Step 3: Install Dependencies<a class="headerlink" href="#step-3-install-dependencies" title="Link to this heading"></a></h2>
+<p>Install all required Python packages:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+</pre></div>
+</div>
+<p>This installs:</p>
+<ul class="simple">
+<li><p><strong>fastapi</strong> - Web framework</p></li>
+<li><p><strong>uvicorn</strong> - ASGI server</p></li>
+<li><p><strong>azure-ai-formrecognizer</strong> - Document Intelligence client</p></li>
+<li><p><strong>azure-storage-blob</strong> - Blob Storage client</p></li>
+<li><p><strong>azure-search-documents</strong> - AI Search client</p></li>
+<li><p><strong>openai</strong> - OpenAI API client</p></li>
+<li><p><strong>faiss-cpu</strong> - Vector search (use faiss-gpu for GPU acceleration)</p></li>
+<li><p><strong>pdf2image</strong> - PDF image conversion</p></li>
+<li><p><strong>PyPDF2</strong> - PDF processing</p></li>
+<li><p><strong>python-dotenv</strong> - Environment variable management</p></li>
+</ul>
+</section>
+<section id="dependencies-breakdown">
+<h2>Dependencies Breakdown<a class="headerlink" href="#dependencies-breakdown" title="Link to this heading"></a></h2>
+<p><strong>Core Processing:</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>azure-ai-formrecognizer&gt;=3.3.0      # Document Intelligence
+azure-storage-blob&gt;=12.18.0         # Blob Storage
+azure-search-documents&gt;=11.4.0      # AI Search
+pdf2image&gt;=1.16.0                   # PDF conversion
+PyPDF2&gt;=3.0.0                       # PDF tools
+numpy&gt;=1.24.0                       # Numerical computing
+</pre></div>
+</div>
+<p><strong>Vector Search:</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>faiss-cpu&gt;=1.7.4                    # Local vector search
+# OR
+faiss-gpu&gt;=1.7.4                    # GPU acceleration (requires CUDA)
+</pre></div>
+</div>
+<p><strong>Web Framework:</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>fastapi&gt;=0.104.0                    # Web framework
+uvicorn[standard]&gt;=0.24.0           # ASGI server
+python-multipart&gt;=0.0.6             # Form handling
+pydantic&gt;=2.0.0                     # Data validation
+</pre></div>
+</div>
+<p><strong>External APIs:</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>openai&gt;=1.3.0                       # OpenAI GPT-4
+python-dotenv&gt;=1.0.0                # Environment variables
+</pre></div>
+</div>
+<p><strong>Development:</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>pytest&gt;=7.4.0                       # Testing
+pytest-asyncio&gt;=0.21.0              # Async testing
+black&gt;=23.0.0                       # Code formatting
+</pre></div>
+</div>
+</section>
+<section id="step-4-configure-environment-variables">
+<h2>Step 4: Configure Environment Variables<a class="headerlink" href="#step-4-configure-environment-variables" title="Link to this heading"></a></h2>
+<p>Create a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file in the project root with your Azure and API credentials:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Azure Storage</span>
+<span class="nv">AZURE_STORAGE_CONNECTION_STRING</span><span class="o">=</span>your_connection_string
+
+<span class="c1"># Azure Document Intelligence</span>
+<span class="nv">AZURE_DI_ENDPOINT</span><span class="o">=</span>https://your-region.api.cognitive.microsoft.com/
+<span class="nv">AZURE_DI_API_KEY</span><span class="o">=</span>your_di_api_key
+
+<span class="c1"># Azure AI Search</span>
+<span class="nv">AZURE_SEARCH_ENDPOINT</span><span class="o">=</span>https://your-search-service.search.windows.net/
+<span class="nv">AZURE_SEARCH_KEY</span><span class="o">=</span>your_search_key
+<span class="nv">AZURE_SEARCH_INDEX</span><span class="o">=</span>transformer-chunks
+
+<span class="c1"># Blob Container Names</span>
+<span class="nv">BLOB_INPUT_CONTAINER</span><span class="o">=</span>transformer-input
+<span class="nv">BLOB_OUTPUT_CONTAINER</span><span class="o">=</span>output-of-di
+<span class="nv">BLOB_CHUNK_CONTAINER</span><span class="o">=</span>chunked-output
+<span class="nv">BLOB_DESIGN_DOCS_CONTAINER</span><span class="o">=</span>order-design-documents
+<span class="nv">BLOB_TEMPLATE_CONTAINER</span><span class="o">=</span>order-templates
+
+<span class="c1"># OpenAI</span>
+<span class="nv">OPENAI_KEY</span><span class="o">=</span>sk-your_openai_key
+<span class="nv">OPENAI_ENDPOINT</span><span class="o">=</span>https://your-resource.openai.azure.com/
+<span class="nv">CHAT_MODEL</span><span class="o">=</span>gpt-4o
+
+<span class="c1"># API Security</span>
+<span class="nv">API_KEY</span><span class="o">=</span>your_secret_api_key
+</pre></div>
+</div>
+<p>See <span class="xref std std-doc">configuration</span> for detailed environment setup instructions.</p>
+</section>
+<section id="step-5-verify-installation">
+<h2>Step 5: Verify Installation<a class="headerlink" href="#step-5-verify-installation" title="Link to this heading"></a></h2>
+<p>Test if everything is installed correctly:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import fastapi; import azure; import openai; print(&#39;✓ All imports successful!&#39;)&quot;</span>
+</pre></div>
+</div>
+<p>Or run the test suite:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest<span class="w"> </span>tests/<span class="w"> </span>-v
+</pre></div>
+</div>
+</section>
+<section id="step-6-start-the-application">
+<h2>Step 6: Start the Application<a class="headerlink" href="#step-6-start-the-application" title="Link to this heading"></a></h2>
+<p><strong>Backend (FastAPI):</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>uvicorn<span class="w"> </span>app:app<span class="w"> </span>--reload<span class="w"> </span>--host<span class="w"> </span><span class="m">0</span>.0.0.0<span class="w"> </span>--port<span class="w"> </span><span class="m">8000</span>
+</pre></div>
+</div>
+<p>You should see:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>INFO:     Uvicorn running on http://0.0.0.0:8000
+INFO:     Application startup complete
+</pre></div>
+</div>
+<p><strong>Frontend (React):</strong></p>
+<p>In a new terminal:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>frontend
+npm<span class="w"> </span>install
+npm<span class="w"> </span>start
+</pre></div>
+</div>
+<p>The React app will open at <code class="docutils literal notranslate"><span class="pre">http://localhost:3000</span></code></p>
+</section>
+<section id="docker-installation-optional">
+<h2>Docker Installation (Optional)<a class="headerlink" href="#docker-installation-optional" title="Link to this heading"></a></h2>
+<p>For containerized deployment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>transformer-rag:latest<span class="w"> </span>.
+docker<span class="w"> </span>run<span class="w"> </span>-p<span class="w"> </span><span class="m">8000</span>:8000<span class="w"> </span>--env-file<span class="w"> </span>.env<span class="w"> </span>transformer-rag:latest
+</pre></div>
+</div>
+</section>
+<section id="troubleshooting-installation">
+<h2>Troubleshooting Installation<a class="headerlink" href="#troubleshooting-installation" title="Link to this heading"></a></h2>
+<p><strong>Problem: “Python not found”</strong></p>
+<p>Solution: Install Python from <a class="reference external" href="https://python.org">python.org</a> or use a package manager:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># macOS with Homebrew</span>
+brew<span class="w"> </span>install<span class="w"> </span>python3
+
+<span class="c1"># Windows with Chocolatey</span>
+choco<span class="w"> </span>install<span class="w"> </span>python
+</pre></div>
+</div>
+<p><strong>Problem: “pip: command not found”</strong></p>
+<p>Solution: Use python’s module syntax:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>pip
+python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+</pre></div>
+</div>
+<p><strong>Problem: “ModuleNotFoundError” after pip install</strong></p>
+<p>Solution: Ensure virtual environment is activated:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Activate environment</span>
+<span class="nb">source</span><span class="w"> </span>venv/bin/activate<span class="w">  </span><span class="c1"># macOS/Linux</span>
+<span class="c1"># or</span>
+venv<span class="se">\S</span>cripts<span class="se">\a</span>ctivate<span class="w">     </span><span class="c1"># Windows</span>
+</pre></div>
+</div>
+<p><strong>Problem: Azure authentication errors</strong></p>
+<p>Solution: Verify your <code class="docutils literal notranslate"><span class="pre">.env</span></code> file has correct credentials and restart the application.</p>
+<p><strong>Problem: “No module named ‘faiss’”</strong></p>
+<p>Solution: Install CPU or GPU version:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># CPU version (recommended for most users)</span>
+pip<span class="w"> </span>install<span class="w"> </span>faiss-cpu
+
+<span class="c1"># GPU version (requires CUDA)</span>
+pip<span class="w"> </span>install<span class="w"> </span>faiss-gpu
+</pre></div>
+</div>
+</section>
+<section id="next-steps">
+<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading"></a></h2>
+<p>After installation:</p>
+<ol class="arabic simple">
+<li><p>Complete <span class="xref std std-doc">configuration</span> setup</p></li>
+<li><p>Follow the <a class="reference internal" href="quickstart.html"><span class="doc">Quick Start</span></a> guide</p></li>
+<li><p>Explore the <span class="xref std std-doc">api/index</span> documentation</p></li>
+<li><p>Review <a class="reference internal" href="architecture.html"><span class="doc">Architecture</span></a> for system design</p></li>
+</ol>
+</section>
+<section id="getting-help">
+<h2>Getting Help<a class="headerlink" href="#getting-help" title="Link to this heading"></a></h2>
+<p>If you encounter issues:</p>
+<ol class="arabic simple">
+<li><p>Check <a class="reference internal" href="troubleshooting.html"><span class="doc">Troubleshooting</span></a></p></li>
+<li><p>Review <span class="xref std std-doc">faq</span></p></li>
+<li><p>Check the <a class="reference external" href="https://github.com/yourorg/transformer-spec-rag/issues">GitHub Issues</a></p></li>
+<li><p>Contact the development team</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>On systems without GPU acceleration, FAISS (CPU) is recommended for easier setup.
+GPU acceleration is optional but recommended for large-scale deployments.</p>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Transformer Spec RAG Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="quickstart.html" class="btn btn-neutral float-right" title="Quick Start" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Your Team.
+      <span class="lastupdated">Last updated on Mar 11, 2026.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,3 +1,13 @@
+"""
+Transformer Document Processor:
+- Reads files from:   input-document-center/{project_folder}/
+- Writes results to:  output-of-di/{project_folder}/
+- Skips project if output already exists in output-of-di
+
+Project folder name comes from the UI:
+    standalone → ProjectName_onshore/   or  ProjectName_offshore/
+    combined   → ProjectName_onshore_offshore/
+"""
 import json
 import re
 import os

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>chunk_by_title_semantic_blob &mdash; Transformer Spec RAG 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=8d563738"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #2980B9" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Transformer Spec RAG
+          </a>
+              <div class="version">
+                1.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quick Start</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Architecture &amp; Design</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Architecture</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">UI-RAG</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Support</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../troubleshooting.html">Troubleshooting</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #2980B9" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Transformer Spec RAG</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">chunk_by_title_semantic_blob</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for chunk_by_title_semantic_blob</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">By-Title Semantic Chunker for Azure</span>
+
+<span class="sd">Features:</span>
+<span class="sd">  Removes document noise (headers, footers, page numbers, doc numbers)</span>
+<span class="sd">  Keeps all meaningful data intact</span>
+<span class="sd">  Correct page numbers</span>
+<span class="sd">  Clean metadata: source_document, project_name, page</span>
+<span class="sd">  Works with Azure Blob Storage</span>
+
+<span class="sd">Usage:</span>
+<span class="sd">  from chunk_by_title_semantic_blob import DocumentChunker</span>
+<span class="sd">  chunker = DocumentChunker()</span>
+<span class="sd">  chunks = chunker.process_all_projects()</span>
+<span class="sd">  chunker.save_chunks()</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dotenv</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_dotenv</span>
+<span class="n">load_dotenv</span><span class="p">()</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">azure.storage.blob</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlobServiceClient</span>
+
+<span class="c1">#Azure Config</span>
+<span class="n">AZURE_CONN_STR</span>      <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;AZURE_STORAGE_CONNECTION_STRING&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="n">DI_OUTPUT_CONTAINER</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;BLOB_OUTPUT_CONTAINER&quot;</span><span class="p">,</span>  <span class="s2">&quot;output-of-di&quot;</span><span class="p">)</span>
+<span class="n">CHUNK_CONTAINER</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;BLOB_CHUNK_CONTAINER&quot;</span><span class="p">,</span>   <span class="s2">&quot;chunked-output&quot;</span><span class="p">)</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tiktoken</span>
+    <span class="n">_ENC</span> <span class="o">=</span> <span class="n">tiktoken</span><span class="o">.</span><span class="n">get_encoding</span><span class="p">(</span><span class="s2">&quot;cl100k_base&quot;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_count_tokens</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">_ENC</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">text</span><span class="p">))</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_count_tokens</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span> <span class="o">//</span> <span class="mi">4</span><span class="p">)</span>
+
+<span class="c1">#Tracks section hierarchy</span>
+<div class="viewcode-block" id="HierarchicalContext">
+<a class="viewcode-back" href="../chunk_by_title_semantic_blob.html#chunk_by_title_semantic_blob.HierarchicalContext">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">HierarchicalContext</span><span class="p">:</span>
+<div class="viewcode-block" id="HierarchicalContext.__init__">
+<a class="viewcode-back" href="../chunk_by_title_semantic_blob.html#chunk_by_title_semantic_blob.HierarchicalContext.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">levels</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+        
+<div class="viewcode-block" id="HierarchicalContext.update">
+<a class="viewcode-back" href="../chunk_by_title_semantic_blob.html#chunk_by_title_semantic_blob.HierarchicalContext.update">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">page</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="n">level</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">page</span><span class="p">)</span>
+        <span class="n">keys_to_remove</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">levels</span> <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="n">level</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys_to_remove</span><span class="p">:</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="n">k</span><span class="p">]</span></div>
+
+    
+<div class="viewcode-block" id="HierarchicalContext.get">
+<a class="viewcode-back" href="../chunk_by_title_semantic_blob.html#chunk_by_title_semantic_blob.HierarchicalContext.get">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="n">level</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span></div>
+</div>
+
+
+
+<span class="n">_NUMBERED_HEADING</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^(\d+(?:\.\d+){0,3})[\s.]\s*\S&quot;</span><span class="p">)</span>
+<span class="n">_HEADING_ROLES</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;sectionHeading&quot;</span><span class="p">,</span> <span class="s2">&quot;heading&quot;</span><span class="p">}</span>
+<span class="n">_MAX_HEADING_LEN</span> <span class="o">=</span> <span class="mi">80</span>
+<span class="n">_VALUE_PATTERN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(=|≥|≤|&gt;|&lt;)\s*[\d.,]+\s*(kV|kA|kW|MW|MVA|Hz|°C|K\b|m\b|mm|cm|dB|%|A\b|V\b|Ω|ohm|bar|N\b)&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+<span class="n">_PERCENT_RATED</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\d+[\d.,]*\s*(%|x)\s*(Ur|Un|In|Ir|Uc|Um)\b&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+<span class="n">_PROSE_START</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^(The|A\s|An\s|All|In\s|For\s|If\s|It\s|This|These|Each|When|Where|No\s|Not|Any|Both|Such|Upon|After|Before|During|Note|See\s|Refer|Unless|Should|Shall|Must|May\s|Per\s)\b&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+<span class="n">_ENDS_WITH_PERIOD</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\.\s*$&quot;</span><span class="p">)</span>
+<span class="n">_HAS_MID_COMMA</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;.{10,},.{5,}&quot;</span><span class="p">)</span>
+<span class="n">_HAS_WORD</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[A-Za-zÀ-ÖØ-öø-ÿ]{2,}&quot;</span><span class="p">)</span>
+<span class="n">_SYMBOL_ONLY</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^[A-Z][a-z]?\s*(=|≥|≤|&gt;|&lt;|\d)&quot;</span><span class="p">)</span>
+
+<span class="c1">#Enhanced noise pattern</span>
+<span class="n">_NOISE_PATTERNS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="c1">#Page numbers: &quot;1/7&quot;, &quot;page 5 of 12&quot;</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^\d+/\d+\s*$&quot;</span><span class="p">),</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;page\s*:?\s*\d+\s*(of\s*\d+)?&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">),</span>
+    
+    <span class="c1">#Document numbers: &quot;22/10231-12&quot;, &quot;Doc. no. 21/10231-14&quot;</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;doc\.?\s*(?:no|number)[\s.:]*\d+/\d+&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">),</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^\d+/\d+[-/]\d+\s*$&quot;</span><span class="p">),</span>
+    
+    <span class="c1">#Revision, date, version</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;revision\s*:?\s*[\d.]+&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">),</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;date\s*:?\s*\d{1,2}[./-]\d{1,2}[./-]\d{2,4}&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">),</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;version\s*:?\s*[\d.]+&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">),</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;klassificering&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">),</span>
+    
+    <span class="c1">#Company/document headers</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^(ENERGINET|energinet)\s*$&quot;</span><span class="p">),</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^(Document\s+title|document\s+summary)\s*$&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">),</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^Shunt\s+Reactor&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">),</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^Restricted|Til\s+arbejdsbrug&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">),</span>
+    
+    <span class="c1">#Footers</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;taking power further&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">),</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;confidential&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">),</span>
+    
+    <span class="c1">#Lines with just numbers/symbols</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^\s*\d+\s*$&quot;</span><span class="p">),</span>
+    <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;^[-_=|]{5,}$&quot;</span><span class="p">),</span>
+<span class="p">]</span>
+
+<span class="c1">#Check if text is noise (headers, footers, page numbers, etc).</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_noise</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">t</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    
+    <span class="c1"># Check against all noise patterns</span>
+    <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">_NOISE_PATTERNS</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">pattern</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+    
+    <span class="k">return</span> <span class="kc">False</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_passes_text_rules</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">t</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">_MAX_HEADING_LEN</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">_VALUE_PATTERN</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_PERCENT_RATED</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_PROSE_START</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">_ENDS_WITH_PERIOD</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="ow">or</span> <span class="n">_HAS_MID_COMMA</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">_HAS_WORD</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">_SYMBOL_ONLY</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">t</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_heading_level_from_number</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">_NUMBERED_HEADING</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+<div class="viewcode-block" id="classify_heading">
+<a class="viewcode-back" href="../chunk_by_title_semantic_blob.html#chunk_by_title_semantic_blob.classify_heading">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">classify_heading</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">role</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">spans</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">page_num</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_passes_text_rules</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">num_level</span> <span class="o">=</span> <span class="n">_heading_level_from_number</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_level</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">num_level</span>
+    <span class="k">if</span> <span class="n">role</span> <span class="ow">in</span> <span class="n">_HEADING_ROLES</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;sectionHeading&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;heading&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">role</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<span class="c1">#By-Title Semantic Chunker for Azure Blob Storage.</span>
+<div class="viewcode-block" id="DocumentChunker">
+<a class="viewcode-back" href="../chunk_by_title_semantic_blob.html#chunk_by_title_semantic_blob.DocumentChunker">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DocumentChunker</span><span class="p">:</span>
+<div class="viewcode-block" id="DocumentChunker.__init__">
+<a class="viewcode-back" href="../chunk_by_title_semantic_blob.html#chunk_by_title_semantic_blob.DocumentChunker.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">min_tokens</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">max_characters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4000</span><span class="p">,</span>
+        <span class="n">new_after_n_chars</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3800</span><span class="p">,</span>
+        <span class="n">combine_text_under_n_chars</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2000</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_tokens</span> <span class="o">=</span> <span class="n">min_tokens</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_characters</span> <span class="o">=</span> <span class="n">max_characters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">new_after_n_chars</span> <span class="o">=</span> <span class="n">new_after_n_chars</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">combine_text_under_n_chars</span> <span class="o">=</span> <span class="n">combine_text_under_n_chars</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_chunks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="c1"># Azure setup</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blob_client</span> <span class="o">=</span> <span class="n">BlobServiceClient</span><span class="o">.</span><span class="n">from_connection_string</span><span class="p">(</span><span class="n">AZURE_CONN_STR</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">di_container</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blob_client</span><span class="o">.</span><span class="n">get_container_client</span><span class="p">(</span><span class="n">DI_OUTPUT_CONTAINER</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chunk_container</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blob_client</span><span class="o">.</span><span class="n">get_container_client</span><span class="p">(</span><span class="n">CHUNK_CONTAINER</span><span class="p">)</span>
+        
+        <span class="c1"># Create container if doesn&#39;t exist</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">chunk_container</span><span class="o">.</span><span class="n">create_container</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">pass</span></div>
+
+
+    <span class="c1">#Download all DI JSONs from Azure blob and return file info</span>
+<div class="viewcode-block" id="DocumentChunker.find_all_di_jsons">
+<a class="viewcode-back" href="../chunk_by_title_semantic_blob.html#chunk_by_title_semantic_blob.DocumentChunker.find_all_di_jsons">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">find_all_di_jsons</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">temp_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]:</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">blob</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">di_container</span><span class="o">.</span><span class="n">list_blobs</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">blob</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;_di_result.json&quot;</span><span class="p">):</span>
+                <span class="k">continue</span>
+            
+            <span class="c1">#Extract project and document names</span>
+            <span class="n">parts</span> <span class="o">=</span> <span class="n">blob</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+            <span class="n">project_name</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">doc_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_di_result&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            
+            <span class="c1">#Download to temp</span>
+            <span class="n">local_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">temp_dir</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">project_name</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">local_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">di_container</span><span class="o">.</span><span class="n">get_blob_client</span><span class="p">(</span><span class="n">blob</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">download_blob</span><span class="p">()</span><span class="o">.</span><span class="n">readinto</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                <span class="s2">&quot;project_name&quot;</span><span class="p">:</span> <span class="n">project_name</span><span class="p">,</span>
+                <span class="s2">&quot;doc_name&quot;</span><span class="p">:</span> <span class="n">doc_name</span><span class="p">,</span>
+                <span class="s2">&quot;json_path&quot;</span><span class="p">:</span> <span class="n">local_path</span>
+            <span class="p">})</span>
+        
+        <span class="n">results</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="s2">&quot;project_name&quot;</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="s2">&quot;doc_name&quot;</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_extract_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tables</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">page_offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]]:</span>
+        <span class="n">tables_by_page</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">tables</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cells&quot;</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="n">page</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="s2">&quot;bounding_regions&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;page_number&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">page_offset</span>
+            <span class="k">if</span> <span class="n">page</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tables_by_page</span><span class="p">:</span>
+                <span class="n">tables_by_page</span><span class="p">[</span><span class="n">page</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="n">row_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">max_row</span><span class="p">,</span> <span class="n">max_col</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+
+            <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">table</span><span class="p">[</span><span class="s2">&quot;cells&quot;</span><span class="p">]:</span>
+                <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;row_index&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">cell</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;column_index&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="n">content</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;content&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">r</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">row_dict</span><span class="p">:</span>
+                    <span class="n">row_dict</span><span class="p">[</span><span class="n">r</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">row_dict</span><span class="p">[</span><span class="n">r</span><span class="p">][</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="n">content</span>
+                <span class="n">max_row</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_row</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+                <span class="n">max_col</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_col</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+
+            <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_row</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_col</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">cell_text</span> <span class="o">=</span> <span class="n">row_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                    <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cell_text</span><span class="p">)</span>
+                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+
+            <span class="n">tables_by_page</span><span class="p">[</span><span class="n">page</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;rows&quot;</span><span class="p">:</span> <span class="n">rows</span><span class="p">})</span>
+
+        <span class="k">return</span> <span class="n">tables_by_page</span>
+
+<div class="viewcode-block" id="DocumentChunker.process_single_json">
+<a class="viewcode-back" href="../chunk_by_title_semantic_blob.html#chunk_by_title_semantic_blob.DocumentChunker.process_single_json">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_single_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_path</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">project_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">doc_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">    Processing: </span><span class="si">{</span><span class="n">json_path</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">di_result</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+        <span class="n">pages</span> <span class="o">=</span> <span class="n">di_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;pages&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">paragraphs_temp</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">di_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;paragraphs&quot;</span><span class="p">,</span> <span class="p">[])</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bounding_regions&quot;</span><span class="p">)]</span>
+        
+        <span class="n">page_offset</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">pages</span> <span class="ow">and</span> <span class="n">pages</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page_number&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">page_offset</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;0-based → 1-based&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">paragraphs_temp</span> <span class="ow">and</span> <span class="n">paragraphs_temp</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;bounding_regions&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;page_number&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">page_offset</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;0-based → 1-based&quot;</span><span class="p">)</span>
+
+        <span class="n">tables</span> <span class="o">=</span> <span class="n">di_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tables&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">tables_by_page</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_tables</span><span class="p">(</span><span class="n">tables</span><span class="p">,</span> <span class="n">page_offset</span><span class="p">)</span>
+
+        <span class="n">paragraphs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">para</span> <span class="ow">in</span> <span class="n">di_result</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;paragraphs&quot;</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="k">if</span> <span class="n">para</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;content&quot;</span><span class="p">):</span>
+                <span class="n">paragraphs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">para</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">paragraphs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+        <span class="n">chunks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">section_lines</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">section_chars</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">current_heading_text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">last_page</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">pending_small_section</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">emitted_tables</span><span class="p">:</span> <span class="nb">set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+        <span class="n">ctx</span> <span class="o">=</span> <span class="n">HierarchicalContext</span><span class="p">()</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_make_chunk</span><span class="p">(</span><span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">page</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">]:</span>
+            <span class="n">tokens</span> <span class="o">=</span> <span class="n">_count_tokens</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">tokens</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_tokens</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+
+            <span class="n">chunk_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">doc_name</span><span class="si">}</span><span class="s2">_p</span><span class="si">{</span><span class="n">page</span><span class="si">}</span><span class="s2">_t</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">timestamp</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">1000</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;chunk_id&quot;</span><span class="p">:</span> <span class="n">chunk_id</span><span class="p">,</span>
+                <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">content</span><span class="p">,</span>
+                <span class="s2">&quot;metadata&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">&quot;source_document&quot;</span><span class="p">:</span> <span class="n">doc_name</span><span class="p">,</span>
+                    <span class="s2">&quot;project_name&quot;</span><span class="p">:</span> <span class="n">project_name</span><span class="p">,</span>
+                    <span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">}</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">flush_section</span><span class="p">(</span><span class="n">page</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">nonlocal</span> <span class="n">section_lines</span><span class="p">,</span> <span class="n">section_chars</span><span class="p">,</span> <span class="n">current_heading_text</span><span class="p">,</span> <span class="n">pending_small_section</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">section_lines</span><span class="p">:</span>
+                <span class="k">return</span>
+
+            <span class="n">full_content</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">current_heading_text</span><span class="p">:</span>
+                <span class="n">full_content</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">current_heading_text</span><span class="si">}</span><span class="s2">: &quot;</span>
+            <span class="n">full_content</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">section_lines</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">full_content</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">combine_text_under_n_chars</span><span class="p">:</span>
+                <span class="n">pending_small_section</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;heading&quot;</span><span class="p">:</span> <span class="n">current_heading_text</span><span class="p">,</span>
+                    <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">full_content</span><span class="p">,</span>
+                    <span class="s2">&quot;lines&quot;</span><span class="p">:</span> <span class="n">section_lines</span><span class="p">,</span>
+                    <span class="s2">&quot;page&quot;</span><span class="p">:</span> <span class="n">page</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">_make_chunk</span><span class="p">(</span><span class="n">full_content</span><span class="p">,</span> <span class="n">page</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+            <span class="n">section_lines</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">section_chars</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">current_heading_text</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">emit_tables_for_page</span><span class="p">(</span><span class="n">page_num</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">nonlocal</span> <span class="n">emitted_tables</span>
+            
+            <span class="k">if</span> <span class="n">page_num</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tables_by_page</span><span class="p">:</span>
+                <span class="k">return</span>
+
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">table</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tables_by_page</span><span class="p">[</span><span class="n">page_num</span><span class="p">]):</span>
+                <span class="n">table_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">doc_name</span><span class="si">}</span><span class="s2">_p</span><span class="si">{</span><span class="n">page_num</span><span class="si">}</span><span class="s2">_t</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="k">if</span> <span class="n">table_id</span> <span class="ow">in</span> <span class="n">emitted_tables</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">emitted_tables</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">table_id</span><span class="p">)</span>
+                
+                <span class="n">rows</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="s2">&quot;rows&quot;</span><span class="p">]</span>
+                <span class="n">table_text</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot; | &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">)</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">_make_chunk</span><span class="p">(</span><span class="n">table_text</span><span class="p">,</span> <span class="n">page_num</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">para</span> <span class="ow">in</span> <span class="n">paragraphs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">para</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bounding_regions&quot;</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="n">page</span> <span class="o">=</span> <span class="n">para</span><span class="p">[</span><span class="s2">&quot;bounding_regions&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;page_number&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">page_offset</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="n">para</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;content&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">role</span> <span class="o">=</span> <span class="n">para</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;role&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">spans</span> <span class="o">=</span> <span class="n">para</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;spans&quot;</span><span class="p">,</span> <span class="p">[])</span>
+
+            <span class="c1"># Filter out noise</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">text</span> <span class="ow">or</span> <span class="n">_is_noise</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">page</span> <span class="o">!=</span> <span class="n">last_page</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">pg</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">last_page</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">page</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+                    <span class="n">emit_tables_for_page</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
+                <span class="n">last_page</span> <span class="o">=</span> <span class="n">page</span>
+
+            <span class="n">h_level</span> <span class="o">=</span> <span class="n">classify_heading</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">role</span><span class="p">,</span> <span class="n">spans</span><span class="p">,</span> <span class="n">page</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">h_level</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">flush_section</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+                
+                <span class="k">if</span> <span class="n">pending_small_section</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">current_heading_text</span> <span class="o">=</span> <span class="n">pending_small_section</span><span class="p">[</span><span class="s2">&quot;heading&quot;</span><span class="p">]</span>
+                    <span class="n">section_lines</span> <span class="o">=</span> <span class="n">pending_small_section</span><span class="p">[</span><span class="s2">&quot;lines&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">text</span><span class="p">]</span>
+                    <span class="n">section_chars</span> <span class="o">=</span> <span class="n">pending_small_section</span><span class="p">[</span><span class="s2">&quot;page&quot;</span><span class="p">]</span>
+                    <span class="n">pending_small_section</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ctx</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">h_level</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">page</span><span class="p">)</span>
+                    <span class="n">current_heading_text</span> <span class="o">=</span> <span class="n">text</span>
+                    <span class="n">section_lines</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="n">section_chars</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">continue</span>
+
+            <span class="n">line_chars</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">section_chars</span> <span class="o">+</span> <span class="n">line_chars</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_characters</span><span class="p">:</span>
+                <span class="n">flush_section</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+                <span class="n">section_lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">text</span><span class="p">]</span>
+                <span class="n">section_chars</span> <span class="o">=</span> <span class="n">line_chars</span>
+            <span class="k">elif</span> <span class="n">section_chars</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_after_n_chars</span><span class="p">:</span>
+                <span class="n">flush_section</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+                <span class="n">section_lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">text</span><span class="p">]</span>
+                <span class="n">section_chars</span> <span class="o">=</span> <span class="n">line_chars</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">section_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+                <span class="n">section_chars</span> <span class="o">+=</span> <span class="n">line_chars</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="n">flush_section</span><span class="p">(</span><span class="n">last_page</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">pending_small_section</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">_make_chunk</span><span class="p">(</span><span class="n">pending_small_section</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">],</span> <span class="n">pending_small_section</span><span class="p">[</span><span class="s2">&quot;page&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">chunks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">pg</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">tables_by_page</span><span class="p">):</span>
+            <span class="n">emit_tables_for_page</span><span class="p">(</span><span class="n">pg</span><span class="p">)</span>
+
+        <span class="n">chunks</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s2">&quot;metadata&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;page&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    → </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span><span class="si">}</span><span class="s2"> chunks&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">chunks</span></div>
+
+
+<div class="viewcode-block" id="DocumentChunker.process_all_projects">
+<a class="viewcode-back" href="../chunk_by_title_semantic_blob.html#chunk_by_title_semantic_blob.DocumentChunker.process_all_projects">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">process_all_projects</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">80</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;BY-TITLE SEMANTIC CHUNKING&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">80</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">temp_dir</span><span class="p">:</span>
+            <span class="n">di_files</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_all_di_jsons</span><span class="p">(</span><span class="n">temp_dir</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">di_files</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No DI JSON files found!&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="p">[]</span>
+
+            <span class="n">all_chunks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">fi</span> <span class="ow">in</span> <span class="n">di_files</span><span class="p">:</span>
+                <span class="n">all_chunks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">process_single_json</span><span class="p">(</span><span class="n">fi</span><span class="p">[</span><span class="s2">&quot;json_path&quot;</span><span class="p">],</span> <span class="n">fi</span><span class="p">[</span><span class="s2">&quot;project_name&quot;</span><span class="p">],</span> <span class="n">fi</span><span class="p">[</span><span class="s2">&quot;doc_name&quot;</span><span class="p">]))</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;=&#39;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">80</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;TOTAL CHUNKS: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">all_chunks</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_chunks</span> <span class="o">=</span> <span class="n">all_chunks</span>
+        <span class="k">return</span> <span class="n">all_chunks</span></div>
+
+
+    <span class="c1">#Upload chunks to Azure Blob Storage.</span>
+<div class="viewcode-block" id="DocumentChunker.save_chunks">
+<a class="viewcode-back" href="../chunk_by_title_semantic_blob.html#chunk_by_title_semantic_blob.DocumentChunker.save_chunks">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_chunks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_blob_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;all_chunks.json&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_chunks</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="n">size_kb</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1024</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">chunk_container</span><span class="o">.</span><span class="n">upload_blob</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">output_blob_name</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Saved → </span><span class="si">{</span><span class="n">CHUNK_CONTAINER</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">output_blob_name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">size_kb</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> KB)&quot;</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Your Team.
+      <span class="lastupdated">Last updated on Mar 11, 2026.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
