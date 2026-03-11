@@ -35,7 +35,11 @@ This documentation provides complete information about the system architecture, 
    :maxdepth: 2
    :caption: API Reference
 
-   modules
+   app
+   rag_query
+   doc_extraction_using_di
+   chunk_by_title_semantic_blob
+   doc_filling_blob
 
 .. toctree::
    :maxdepth: 2
