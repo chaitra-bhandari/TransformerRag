@@ -27,7 +27,11 @@ The system consists of three main layers:
             ▼                  ▼                  ▼
     ┌──────────────────┐ ┌───────────────────┐ ┌────────────────┐
     │ Azure Services   │ │ Vector Database   │ │ Storage Layer  │
+<<<<<<< HEAD
     │ - DI (Extract)   │ │                 │ │ - Blob Storage │
+=======
+    │ - DI (Extract)   │ │                   │ │ - Blob Storage │
+>>>>>>> 476f0ab525419fb63b99b6ae6da186bc3d18eac5
     │ - OpenAI (RAG)   │ │ - FAISS (Local)   │ │ - Containers   │
     └──────────────────┘ └───────────────────┘ └────────────────┘
 
@@ -80,15 +84,7 @@ Azure Document Intelligence extracts structure:
 - ``tables``: Structured table data with cells
 - ``bounding_regions``: Spatial coordinates
 
-**Image Page Detection:**
-
-For PDFs, system detects image-heavy pages:
-- Convert PDF to images
-- Calculate pixel variance
-- Flag low-text pages for manual review
-- Extract minimal text from images
-
-**3. Semantic Chunking** (``chunk_by_title_semantic_blob.py``)
+**2. Semantic Chunking** (``chunk_by_title_semantic_blob.py``)
 
 Intelligently splits documents while preserving structure:
 
