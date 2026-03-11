@@ -10,4 +10,4 @@ python:
     - requirements: UI-RAG/requirements.txt
 
 sphinx:
-  configuration: docs/conf.py
+  configuration: UI-RAG/docs/conf.py
