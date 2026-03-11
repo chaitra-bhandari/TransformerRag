@@ -25,7 +25,8 @@ This documentation provides complete information about the system architecture, 
    :maxdepth: 2
    :caption: API Reference
 
-  modules
+   modules
+   source_code
 
 .. toctree::
    :maxdepth: 2
