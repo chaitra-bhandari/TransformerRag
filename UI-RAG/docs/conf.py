@@ -10,7 +10,7 @@ from datetime import datetime
 
 # Get the absolute path to the project root
 docs_dir = Path(__file__).parent.absolute()
-project_root = docs_dir.parent.absolute()
+project_root = str(Path(__file__).parent.parent.parent.absolute())
 
 print(f"\n{'='*70}")
 print(f"SPHINX CONFIGURATION")
