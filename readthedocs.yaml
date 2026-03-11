@@ -1,24 +1,20 @@
 version: 2
 
-# Python version and dependencies
+build:
+  os: ubuntu-22.04
+  tools:
+    python: '3.9'
+
 python:
-  version: '3.11'
+  version: 3.9
   install:
     - requirements: docs/requirements.txt
     - path: .
 
-# Sphinx configuration
 sphinx:
   configuration: docs/conf.py
   fail_on_warning: false
 
-# Build configuration
-build:
-  os: ubuntu-22.04
-  tools:
-    python: "3.11"
-
-# Formats
 formats:
   - pdf
   - epub
