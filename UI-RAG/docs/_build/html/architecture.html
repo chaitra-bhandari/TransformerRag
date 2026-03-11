@@ -7,6 +7,7 @@
   <title>Architecture &mdash; Transformer Spec RAG 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
 
   
   <!--[if lt IE 9]>
@@ -21,7 +22,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="UI-RAG" href="modules.html" />
+    <link rel="next" title="app module" href="app.html" />
     <link rel="prev" title="Quick Start" href="quickstart.html" /> 
 </head>
 
@@ -62,8 +63,6 @@
 <li class="toctree-l2"><a class="reference internal" href="#api-layer-architecture">API Layer Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#frontend-architecture">Frontend Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#scalability-considerations">Scalability Considerations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#security-architecture">Security Architecture</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-dependencies">Module Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#deployment-architecture">Deployment Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#next-steps">Next Steps</a></li>
 </ul>
@@ -71,7 +70,11 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">UI-RAG</a></li>
+<li class="toctree-l1"><a class="reference internal" href="app.html">app module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rag_query.html">RAG Query Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doc_extraction_using_di.html">doc_extraction_using_di module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chunk_by_title_semantic_blob.html">chunk_by_title_semantic_blob module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doc_filling_blob.html">doc_filling_blob module</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Support</span></p>
 <ul>
@@ -124,8 +127,9 @@
         ▼                  ▼                  ▼
 ┌──────────────────┐ ┌───────────────────┐ ┌────────────────┐
 │ Azure Services   │ │ Vector Database   │ │ Storage Layer  │
-│ - DI (Extract)   │ │ - AI Search       │ │ - Blob Storage │
-│ - OpenAI (RAG)   │ │ - FAISS (Local)   │ │ - Containers   │
+│ - DI (Extract)   │ │  - FAISS (Local)  │ │ - Blob Storage │
+│ - DI (Extract)   │ │                   │ │ - Blob Storage │
+│ - OpenAI (RAG)   │ │                   │ │ - Containers   │
 └──────────────────┘ └───────────────────┘ └────────────────┘
 </pre></div>
 </div>
@@ -134,7 +138,7 @@
 <h2>Core Processing Pipeline<a class="headerlink" href="#core-processing-pipeline" title="Link to this heading"></a></h2>
 <p><strong>1. Document Ingestion</strong></p>
 <p>When a user uploads documents:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Upload File (PDF/DOCX/XLSX)
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Upload File (PDF)
          ↓
 FastAPI Endpoint validates
          ↓
@@ -144,7 +148,7 @@ Upload to Azure Blob Storage
 </pre></div>
 </div>
 <p><strong>File Validation:</strong>
-- Extension check (.pdf, .docx, .xlsx)
+- Extension check (.pdf)
 - Size validation (max 100 MB)
 - Content type verification
 - Duplicate detection (MD5 hash)</p>
@@ -170,13 +174,7 @@ Saved to output-of-di container
 - <code class="docutils literal notranslate"><span class="pre">paragraphs</span></code>: Text content with roles and positions
 - <code class="docutils literal notranslate"><span class="pre">tables</span></code>: Structured table data with cells
 - <code class="docutils literal notranslate"><span class="pre">bounding_regions</span></code>: Spatial coordinates</p>
-<p><strong>Image Page Detection:</strong></p>
-<p>For PDFs, system detects image-heavy pages:
-- Convert PDF to images
-- Calculate pixel variance
-- Flag low-text pages for manual review
-- Extract minimal text from images</p>
-<p><strong>3. Semantic Chunking</strong> (<code class="docutils literal notranslate"><span class="pre">chunk_by_title_semantic_blob.py</span></code>)</p>
+<p><strong>2. Semantic Chunking</strong> (<code class="docutils literal notranslate"><span class="pre">chunk_by_title_semantic_blob.py</span></code>)</p>
 <p>Intelligently splits documents while preserving structure:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>DI Output
      ↓
@@ -274,7 +272,7 @@ Ready for queries
 </div>
 <p><strong>6. Query Processing</strong> (<code class="docutils literal notranslate"><span class="pre">rag_query.py</span></code> - Core Module)</p>
 <p>When user asks a question:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>User Question: &quot;What is the transformer voltage?&quot;
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>User Question: &quot;Generate order design documents&quot;
      ↓
 Convert to embedding (same model as chunks)
      ↓
@@ -305,10 +303,9 @@ Question: &quot;What is the transformer voltage?&quot;
      ↓
 OpenAI GPT-4 Processing
      ↓
-Generated Response:
-&quot;Based on the specifications, the transformer is rated
- for 400 kV nominal voltage with operating range of
- 380-420 kV as per document section 2.3...&quot;
+Generated results as JSON
+     ↓
+ Json used to fill documents
      ↓
 Return to user
 </pre></div>
@@ -355,7 +352,7 @@ Output: &quot;Unit-01: 400 kV&quot;
 <p>Complete data journey through the system:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>┌──────────────────┐
 │  User Upload     │
-│   PDF/DOCX       │
+│      PDF         │
 └────────┬─────────┘
          │
          ▼
@@ -403,30 +400,33 @@ Output: &quot;Unit-01: 400 kV&quot;
          │
          ▼
 ┌──────────────────────────┐
-│  Index in Azure AI Search│
+│  Index in FAISS          │
+│    (stored in blob       │
 │  - Store vectors         │
 │  - Index metadata        │
 └────────┬─────────────────┘
          │
-         ▼ (Ready for queries)
+         ▼ (Ready for document generation)
 
 ┌──────────────────────────┐
 │  User Question           │
-│  (Chat Interface)        │
+│ (Generate order document)│
 └────────┬─────────────────┘
          │
          ▼
 ┌──────────────────────────┐
-│  Embed Query             │
+│  Embed Queries           │
 │  (Same embedding model)  │
 └────────┬─────────────────┘
          │
          ▼
 ┌──────────────────────────┐
-│  Semantic Search         │
-│  (AI Search Index)       │
+│  Semantic+keyword search │
+│  (FAISS Search Index)    │
 │  - Top-K retrieval       │
 │  - Metadata filtering    │
+│  - CrossEncoder reranking│
+│   for relevance          │
 └────────┬─────────────────┘
          │
          ▼
@@ -462,28 +462,28 @@ Output: &quot;Unit-01: 400 kV&quot;
 <p><strong>Azure Blob Storage Containers</strong></p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>storage-account/
 ├── transformer-input/              # Raw uploads
-│   ├── ProjectA_onshore/
+│   ├── ProjectA/
 │   │   ├── spec1.pdf
 │   │   ├── spec2.docx
 │   │   └── data.xlsx
-│   └── ProjectB_offshore/
+│   └── ProjectB/
 │       └── spec.pdf
 │
 ├── output-of-di/                   # DI extraction results
-│   ├── ProjectA_onshore/
+│   ├── ProjectA/
 │   │   ├── spec1_di_result.json
 │   │   └── spec2_di_result.json
-│   └── ProjectB_offshore/
+│   └── ProjectB/
 │       └── spec_di_result.json
 │
 ├── chunked-output/                 # Chunked documents
 │   └── all_chunks.json             # All chunks + metadata
 │
 ├── order-design-documents/         # Generated documents
-│   ├── ProjectA_onshore/
+│   ├── ProjectA/
 │   │   ├── Order_A_unit1.docx
 │   │   └── Order_B_unit1.docx
-│   └── ProjectB_offshore/
+│   └── ProjectB/
 │       └── Order_A_unit1.docx
 │
 ├── order-templates/                # Document templates
@@ -497,16 +497,11 @@ Output: &quot;Unit-01: 400 kV&quot;
 <p><strong>FAISS Index Storage Structure</strong></p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>storage-account/
 ├── faiss-indexes/                  ← FAISS vector indexes
-│   ├── ProjectA_onshore.index
-│   ├── ProjectA_offshore.index
-│   ├── ProjectB_onshore.index
-│   └── ProjectB_offshore.index
+│   ├── docs.index
+│
 │
 └── faiss-metadata/                 ← Chunk metadata for lookup
-    ├── ProjectA_onshore_metadata.json
-    ├── ProjectA_offshore_metadata.json
-    ├── ProjectB_onshore_metadata.json
-    └── ProjectB_offshore_metadata.json
+    ├── docs.pkl
 </pre></div>
 </div>
 <p><strong>FAISS Index Format</strong></p>
@@ -619,52 +614,6 @@ Display to User
 - Index query caching
 - Async/await for I/O operations</p>
 </section>
-<section id="security-architecture">
-<h2>Security Architecture<a class="headerlink" href="#security-architecture" title="Link to this heading"></a></h2>
-<p><strong>Layer-Based Security</strong></p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Network Layer
-├── HTTPS/TLS encryption
-├── CORS policy enforcement
-└── Rate limiting
-
-Application Layer
-├── API key validation
-├── Input validation
-├── SQL injection prevention
-└── XSS protection
-
-Data Layer
-├── Azure Storage encryption
-├── Azure AI Search security
-├── Credential management
-└── Access control
-</pre></div>
-</div>
-<p><strong>Secrets Management</strong>
-- Use Azure Key Vault (production)
-- .env files (development only)
-- Never commit secrets
-- Rotate credentials regularly</p>
-</section>
-<section id="module-dependencies">
-<h2>Module Dependencies<a class="headerlink" href="#module-dependencies" title="Link to this heading"></a></h2>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>app.py (main)
-├── doc_extraction_using_di.py
-│   ├── azure.ai.formrecognizer
-│   ├── pdf2image
-│   └── PyPDF2
-│
-├── chunk_by_title_semantic_blob.py
-│   └── tiktoken
-│
-├── rag_query.py
-│   └── openai
-│
-└── doc_filling_blob.py
-    └── python-docx
-</pre></div>
-</div>
-</section>
 <section id="deployment-architecture">
 <h2>Deployment Architecture<a class="headerlink" href="#deployment-architecture" title="Link to this heading"></a></h2>
 <p><strong>Development</strong>
@@ -698,7 +647,7 @@ Data Layer
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="quickstart.html" class="btn btn-neutral float-left" title="Quick Start" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="modules.html" class="btn btn-neutral float-right" title="UI-RAG" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="app.html" class="btn btn-neutral float-right" title="app module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

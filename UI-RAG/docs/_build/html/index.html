@@ -7,6 +7,7 @@
   <title>Transformer Spec RAG Documentation &mdash; Transformer Spec RAG 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
 
   
   <!--[if lt IE 9]>
@@ -57,7 +58,11 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">UI-RAG</a></li>
+<li class="toctree-l1"><a class="reference internal" href="app.html">app module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rag_query.html">RAG Query Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doc_extraction_using_di.html">doc_extraction_using_di module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chunk_by_title_semantic_blob.html">chunk_by_title_semantic_blob module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doc_filling_blob.html">doc_filling_blob module</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Support</span></p>
 <ul>
@@ -105,7 +110,6 @@
 <li class="toctree-l2"><a class="reference internal" href="installation.html#step-4-configure-environment-variables">Step 4: Configure Environment Variables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#step-5-verify-installation">Step 5: Verify Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#step-6-start-the-application">Step 6: Start the Application</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#docker-installation-optional">Docker Installation (Optional)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#troubleshooting-installation">Troubleshooting Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#next-steps">Next Steps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#getting-help">Getting Help</a></li>
@@ -117,13 +121,10 @@
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#your-first-upload">Your First Upload</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#core-workflow">Core Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#using-the-web-interface">Using the Web Interface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#api-examples">API Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#common-tasks">Common Tasks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#performance-tips">Performance Tips</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#system-limitations-workarounds">System Limitations &amp; Workarounds</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html#debugging">Debugging</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#next-steps">Next Steps</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quickstart.html#getting-help">Getting Help</a></li>
 </ul>
 </li>
 </ul>
@@ -139,8 +140,6 @@
 <li class="toctree-l2"><a class="reference internal" href="architecture.html#api-layer-architecture">API Layer Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture.html#frontend-architecture">Frontend Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture.html#scalability-considerations">Scalability Considerations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="architecture.html#security-architecture">Security Architecture</a></li>
-<li class="toctree-l2"><a class="reference internal" href="architecture.html#module-dependencies">Module Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture.html#deployment-architecture">Deployment Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture.html#next-steps">Next Steps</a></li>
 </ul>
@@ -148,16 +147,55 @@
 </ul>
 </div>
 <div class="toctree-wrapper compound">
-</div>
-<div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">UI-RAG</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="app.html">app module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="chunk_by_title_semantic_blob.html">chunk_by_title_semantic_blob module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="doc_extraction_using_di.html">doc_extraction_using_di module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="doc_filling_blob.html">doc_filling_blob module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rag_query.html">rag_query module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="app.html">app module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="app.html#transformer-spec-rag-fastapi-backend">Transformer Spec RAG — FastAPI Backend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.sanitize_name"><code class="docutils literal notranslate"><span class="pre">sanitize_name()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.make_blob_folder"><code class="docutils literal notranslate"><span class="pre">make_blob_folder()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.validate_file"><code class="docutils literal notranslate"><span class="pre">validate_file()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.upload_file_to_blob"><code class="docutils literal notranslate"><span class="pre">upload_file_to_blob()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.trigger_di_processing"><code class="docutils literal notranslate"><span class="pre">trigger_di_processing()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.trigger_chunking"><code class="docutils literal notranslate"><span class="pre">trigger_chunking()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.trigger_order_generation"><code class="docutils literal notranslate"><span class="pre">trigger_order_generation()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.run_pipeline"><code class="docutils literal notranslate"><span class="pre">run_pipeline()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.find_order_in_blob"><code class="docutils literal notranslate"><span class="pre">find_order_in_blob()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.run_rag_query"><code class="docutils literal notranslate"><span class="pre">run_rag_query()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.answer_general_question"><code class="docutils literal notranslate"><span class="pre">answer_general_question()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.extract_project_from_message"><code class="docutils literal notranslate"><span class="pre">extract_project_from_message()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.ChatRequest"><code class="docutils literal notranslate"><span class="pre">ChatRequest</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.serve_ui"><code class="docutils literal notranslate"><span class="pre">serve_ui()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.list_projects"><code class="docutils literal notranslate"><span class="pre">list_projects()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.get_project_details"><code class="docutils literal notranslate"><span class="pre">get_project_details()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.create_new_project"><code class="docutils literal notranslate"><span class="pre">create_new_project()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.regenerate_orders"><code class="docutils literal notranslate"><span class="pre">regenerate_orders()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.download_order"><code class="docutils literal notranslate"><span class="pre">download_order()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.test_hello"><code class="docutils literal notranslate"><span class="pre">test_hello()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.chat"><code class="docutils literal notranslate"><span class="pre">chat()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.test_blob_connection"><code class="docutils literal notranslate"><span class="pre">test_blob_connection()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.diagnose"><code class="docutils literal notranslate"><span class="pre">diagnose()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="app.html#app.get_project"><code class="docutils literal notranslate"><span class="pre">get_project()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rag_query.html">RAG Query Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rag_query.html#features">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rag_query.html#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rag_query.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rag_query.html#github">GitHub</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="doc_extraction_using_di.html">doc_extraction_using_di module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="doc_extraction_using_di.html#doc_extraction_using_di.TransformerDocumentProcessor"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="chunk_by_title_semantic_blob.html">chunk_by_title_semantic_blob module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="chunk_by_title_semantic_blob.html#chunk_by_title_semantic_blob.HierarchicalContext"><code class="docutils literal notranslate"><span class="pre">HierarchicalContext</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="chunk_by_title_semantic_blob.html#chunk_by_title_semantic_blob.classify_heading"><code class="docutils literal notranslate"><span class="pre">classify_heading()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="chunk_by_title_semantic_blob.html#chunk_by_title_semantic_blob.DocumentChunker"><code class="docutils literal notranslate"><span class="pre">DocumentChunker</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="doc_filling_blob.html">doc_filling_blob module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="doc_filling_blob.html#doc_filling_blob.DocxFiller"><code class="docutils literal notranslate"><span class="pre">DocxFiller</span></code></a></li>
 </ul>
 </li>
 </ul>

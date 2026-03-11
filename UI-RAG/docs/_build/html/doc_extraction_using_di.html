@@ -7,6 +7,7 @@
   <title>doc_extraction_using_di module &mdash; Transformer Spec RAG 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
 
   
   <!--[if lt IE 9]>
@@ -21,8 +22,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="doc_filling_blob module" href="doc_filling_blob.html" />
-    <link rel="prev" title="chunk_by_title_semantic_blob module" href="chunk_by_title_semantic_blob.html" /> 
+    <link rel="next" title="chunk_by_title_semantic_blob module" href="chunk_by_title_semantic_blob.html" />
+    <link rel="prev" title="RAG Query Module" href="rag_query.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -58,30 +59,27 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">UI-RAG</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="app.html">app module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="chunk_by_title_semantic_blob.html">chunk_by_title_semantic_blob module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">doc_extraction_using_di module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.__init__"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.__init__()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.project_already_processed"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.project_already_processed()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.list_project_files"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.list_project_files()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.download_to_temp"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.download_to_temp()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.upload_result_to_blob"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.upload_result_to_blob()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.calculate_hash"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.calculate_hash()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.is_duplicate"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.is_duplicate()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.detect_image_pages"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.detect_image_pages()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.process_with_di"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.process_with_di()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.process_single_file"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.process_single_file()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.process_project"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.process_project()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="app.html">app module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rag_query.html">RAG Query Module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">doc_extraction_using_di module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.__init__"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.project_already_processed"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.project_already_processed()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.list_project_files"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.list_project_files()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.download_to_temp"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.download_to_temp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.upload_result_to_blob"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.upload_result_to_blob()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.calculate_hash"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.calculate_hash()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.is_duplicate"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.is_duplicate()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.detect_image_pages"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.detect_image_pages()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.process_with_di"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.process_with_di()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.process_single_file"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.process_single_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_extraction_using_di.TransformerDocumentProcessor.process_project"><code class="docutils literal notranslate"><span class="pre">TransformerDocumentProcessor.process_project()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="doc_filling_blob.html">doc_filling_blob module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rag_query.html">rag_query module</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="chunk_by_title_semantic_blob.html">chunk_by_title_semantic_blob module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doc_filling_blob.html">doc_filling_blob module</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Support</span></p>
 <ul>
@@ -102,7 +100,6 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="modules.html">UI-RAG</a></li>
       <li class="breadcrumb-item active">doc_extraction_using_di module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/doc_extraction_using_di.rst.txt" rel="nofollow"> View page source</a>
@@ -316,8 +313,8 @@ This comes directly from what the UI created.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="chunk_by_title_semantic_blob.html" class="btn btn-neutral float-left" title="chunk_by_title_semantic_blob module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="doc_filling_blob.html" class="btn btn-neutral float-right" title="doc_filling_blob module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="rag_query.html" class="btn btn-neutral float-left" title="RAG Query Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="chunk_by_title_semantic_blob.html" class="btn btn-neutral float-right" title="chunk_by_title_semantic_blob module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

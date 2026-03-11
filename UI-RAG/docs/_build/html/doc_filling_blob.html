@@ -7,6 +7,7 @@
   <title>doc_filling_blob module &mdash; Transformer Spec RAG 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
 
   
   <!--[if lt IE 9]>
@@ -21,8 +22,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="rag_query module" href="rag_query.html" />
-    <link rel="prev" title="doc_extraction_using_di module" href="doc_extraction_using_di.html" /> 
+    <link rel="next" title="Troubleshooting" href="troubleshooting.html" />
+    <link rel="prev" title="chunk_by_title_semantic_blob module" href="chunk_by_title_semantic_blob.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -58,30 +59,27 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">UI-RAG</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="app.html">app module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="chunk_by_title_semantic_blob.html">chunk_by_title_semantic_blob module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="doc_extraction_using_di.html">doc_extraction_using_di module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">doc_filling_blob module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#doc_filling_blob.DocxFiller"><code class="docutils literal notranslate"><span class="pre">DocxFiller</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.__init__"><code class="docutils literal notranslate"><span class="pre">DocxFiller.__init__()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.normalize"><code class="docutils literal notranslate"><span class="pre">DocxFiller.normalize()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.find_json_key"><code class="docutils literal notranslate"><span class="pre">DocxFiller.find_json_key()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.strip_metadata"><code class="docutils literal notranslate"><span class="pre">DocxFiller.strip_metadata()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.get_value"><code class="docutils literal notranslate"><span class="pre">DocxFiller.get_value()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.is_heading"><code class="docutils literal notranslate"><span class="pre">DocxFiller.is_heading()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.remove_content_after_heading"><code class="docutils literal notranslate"><span class="pre">DocxFiller.remove_content_after_heading()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.make_table"><code class="docutils literal notranslate"><span class="pre">DocxFiller.make_table()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.make_cooling_table"><code class="docutils literal notranslate"><span class="pre">DocxFiller.make_cooling_table()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.process"><code class="docutils literal notranslate"><span class="pre">DocxFiller.process()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.download_template"><code class="docutils literal notranslate"><span class="pre">DocxFiller.download_template()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.upload_output"><code class="docutils literal notranslate"><span class="pre">DocxFiller.upload_output()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#doc_filling_blob.DocxFiller.run"><code class="docutils literal notranslate"><span class="pre">DocxFiller.run()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="app.html">app module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rag_query.html">RAG Query Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doc_extraction_using_di.html">doc_extraction_using_di module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chunk_by_title_semantic_blob.html">chunk_by_title_semantic_blob module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">doc_filling_blob module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#doc_filling_blob.DocxFiller"><code class="docutils literal notranslate"><span class="pre">DocxFiller</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#doc_filling_blob.DocxFiller.__init__"><code class="docutils literal notranslate"><span class="pre">DocxFiller.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_filling_blob.DocxFiller.normalize"><code class="docutils literal notranslate"><span class="pre">DocxFiller.normalize()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_filling_blob.DocxFiller.find_json_key"><code class="docutils literal notranslate"><span class="pre">DocxFiller.find_json_key()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_filling_blob.DocxFiller.strip_metadata"><code class="docutils literal notranslate"><span class="pre">DocxFiller.strip_metadata()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_filling_blob.DocxFiller.get_value"><code class="docutils literal notranslate"><span class="pre">DocxFiller.get_value()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_filling_blob.DocxFiller.is_heading"><code class="docutils literal notranslate"><span class="pre">DocxFiller.is_heading()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_filling_blob.DocxFiller.remove_content_after_heading"><code class="docutils literal notranslate"><span class="pre">DocxFiller.remove_content_after_heading()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_filling_blob.DocxFiller.make_table"><code class="docutils literal notranslate"><span class="pre">DocxFiller.make_table()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_filling_blob.DocxFiller.make_cooling_table"><code class="docutils literal notranslate"><span class="pre">DocxFiller.make_cooling_table()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_filling_blob.DocxFiller.process"><code class="docutils literal notranslate"><span class="pre">DocxFiller.process()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_filling_blob.DocxFiller.download_template"><code class="docutils literal notranslate"><span class="pre">DocxFiller.download_template()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_filling_blob.DocxFiller.upload_output"><code class="docutils literal notranslate"><span class="pre">DocxFiller.upload_output()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doc_filling_blob.DocxFiller.run"><code class="docutils literal notranslate"><span class="pre">DocxFiller.run()</span></code></a></li>
 </ul>
 </li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="rag_query.html">rag_query module</a></li>
 </ul>
 </li>
 </ul>
@@ -104,7 +102,6 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="modules.html">UI-RAG</a></li>
       <li class="breadcrumb-item active">doc_filling_blob module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/doc_filling_blob.rst.txt" rel="nofollow"> View page source</a>
@@ -253,8 +250,8 @@ Unit is already embedded in values by strip_metadata, so no unit in headers.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="doc_extraction_using_di.html" class="btn btn-neutral float-left" title="doc_extraction_using_di module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="rag_query.html" class="btn btn-neutral float-right" title="rag_query module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="chunk_by_title_semantic_blob.html" class="btn btn-neutral float-left" title="chunk_by_title_semantic_blob module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="troubleshooting.html" class="btn btn-neutral float-right" title="Troubleshooting" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -7,6 +7,7 @@
   <title>chunk_by_title_semantic_blob module &mdash; Transformer Spec RAG 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
 
   
   <!--[if lt IE 9]>
@@ -21,8 +22,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="doc_extraction_using_di module" href="doc_extraction_using_di.html" />
-    <link rel="prev" title="app module" href="app.html" /> 
+    <link rel="next" title="doc_filling_blob module" href="doc_filling_blob.html" />
+    <link rel="prev" title="doc_extraction_using_di module" href="doc_extraction_using_di.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -58,31 +59,28 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">UI-RAG</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="app.html">app module</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">chunk_by_title_semantic_blob module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#chunk_by_title_semantic_blob.HierarchicalContext"><code class="docutils literal notranslate"><span class="pre">HierarchicalContext</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#chunk_by_title_semantic_blob.HierarchicalContext.__init__"><code class="docutils literal notranslate"><span class="pre">HierarchicalContext.__init__()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#chunk_by_title_semantic_blob.HierarchicalContext.update"><code class="docutils literal notranslate"><span class="pre">HierarchicalContext.update()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#chunk_by_title_semantic_blob.HierarchicalContext.get"><code class="docutils literal notranslate"><span class="pre">HierarchicalContext.get()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="app.html">app module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rag_query.html">RAG Query Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doc_extraction_using_di.html">doc_extraction_using_di module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">chunk_by_title_semantic_blob module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#chunk_by_title_semantic_blob.HierarchicalContext"><code class="docutils literal notranslate"><span class="pre">HierarchicalContext</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#chunk_by_title_semantic_blob.HierarchicalContext.__init__"><code class="docutils literal notranslate"><span class="pre">HierarchicalContext.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#chunk_by_title_semantic_blob.HierarchicalContext.update"><code class="docutils literal notranslate"><span class="pre">HierarchicalContext.update()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#chunk_by_title_semantic_blob.HierarchicalContext.get"><code class="docutils literal notranslate"><span class="pre">HierarchicalContext.get()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#chunk_by_title_semantic_blob.classify_heading"><code class="docutils literal notranslate"><span class="pre">classify_heading()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#chunk_by_title_semantic_blob.DocumentChunker"><code class="docutils literal notranslate"><span class="pre">DocumentChunker</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#chunk_by_title_semantic_blob.DocumentChunker.__init__"><code class="docutils literal notranslate"><span class="pre">DocumentChunker.__init__()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#chunk_by_title_semantic_blob.DocumentChunker.find_all_di_jsons"><code class="docutils literal notranslate"><span class="pre">DocumentChunker.find_all_di_jsons()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#chunk_by_title_semantic_blob.DocumentChunker.process_single_json"><code class="docutils literal notranslate"><span class="pre">DocumentChunker.process_single_json()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#chunk_by_title_semantic_blob.DocumentChunker.process_all_projects"><code class="docutils literal notranslate"><span class="pre">DocumentChunker.process_all_projects()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#chunk_by_title_semantic_blob.DocumentChunker.save_chunks"><code class="docutils literal notranslate"><span class="pre">DocumentChunker.save_chunks()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#chunk_by_title_semantic_blob.classify_heading"><code class="docutils literal notranslate"><span class="pre">classify_heading()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#chunk_by_title_semantic_blob.DocumentChunker"><code class="docutils literal notranslate"><span class="pre">DocumentChunker</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#chunk_by_title_semantic_blob.DocumentChunker.__init__"><code class="docutils literal notranslate"><span class="pre">DocumentChunker.__init__()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#chunk_by_title_semantic_blob.DocumentChunker.find_all_di_jsons"><code class="docutils literal notranslate"><span class="pre">DocumentChunker.find_all_di_jsons()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#chunk_by_title_semantic_blob.DocumentChunker.process_single_json"><code class="docutils literal notranslate"><span class="pre">DocumentChunker.process_single_json()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#chunk_by_title_semantic_blob.DocumentChunker.process_all_projects"><code class="docutils literal notranslate"><span class="pre">DocumentChunker.process_all_projects()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#chunk_by_title_semantic_blob.DocumentChunker.save_chunks"><code class="docutils literal notranslate"><span class="pre">DocumentChunker.save_chunks()</span></code></a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="doc_extraction_using_di.html">doc_extraction_using_di module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="doc_filling_blob.html">doc_filling_blob module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rag_query.html">rag_query module</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="doc_filling_blob.html">doc_filling_blob module</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Support</span></p>
 <ul>
@@ -103,7 +101,6 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="modules.html">UI-RAG</a></li>
       <li class="breadcrumb-item active">chunk_by_title_semantic_blob module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/chunk_by_title_semantic_blob.rst.txt" rel="nofollow"> View page source</a>
@@ -279,8 +276,8 @@ chunker.save_chunks()</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="app.html" class="btn btn-neutral float-left" title="app module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="doc_extraction_using_di.html" class="btn btn-neutral float-right" title="doc_extraction_using_di module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="doc_extraction_using_di.html" class="btn btn-neutral float-left" title="doc_extraction_using_di module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="doc_filling_blob.html" class="btn btn-neutral float-right" title="doc_filling_blob module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

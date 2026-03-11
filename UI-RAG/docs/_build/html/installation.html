@@ -7,6 +7,7 @@
   <title>Installation &mdash; Transformer Spec RAG 1.0.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
 
   
   <!--[if lt IE 9]>
@@ -59,7 +60,6 @@
 <li class="toctree-l2"><a class="reference internal" href="#step-4-configure-environment-variables">Step 4: Configure Environment Variables</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#step-5-verify-installation">Step 5: Verify Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#step-6-start-the-application">Step 6: Start the Application</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#docker-installation-optional">Docker Installation (Optional)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#troubleshooting-installation">Troubleshooting Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#next-steps">Next Steps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#getting-help">Getting Help</a></li>
@@ -73,7 +73,11 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">UI-RAG</a></li>
+<li class="toctree-l1"><a class="reference internal" href="app.html">app module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rag_query.html">RAG Query Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doc_extraction_using_di.html">doc_extraction_using_di module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chunk_by_title_semantic_blob.html">chunk_by_title_semantic_blob module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doc_filling_blob.html">doc_filling_blob module</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Troubleshooting &amp; Support</span></p>
 <ul>
@@ -144,11 +148,6 @@ python3<span class="w"> </span>--version
 <p><strong>On Windows:</strong></p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>venv
 venv<span class="se">\S</span>cripts<span class="se">\a</span>ctivate
-</pre></div>
-</div>
-<p><strong>On macOS/Linux:</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>venv
-<span class="nb">source</span><span class="w"> </span>venv/bin/activate
 </pre></div>
 </div>
 <p>You’ll see <code class="docutils literal notranslate"><span class="pre">(venv)</span></code> prefix in your terminal prompt when activated.</p>
@@ -273,22 +272,11 @@ npm<span class="w"> </span>start
 </div>
 <p>The React app will open at <code class="docutils literal notranslate"><span class="pre">http://localhost:3000</span></code></p>
 </section>
-<section id="docker-installation-optional">
-<h2>Docker Installation (Optional)<a class="headerlink" href="#docker-installation-optional" title="Link to this heading"></a></h2>
-<p>For containerized deployment:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>transformer-rag:latest<span class="w"> </span>.
-docker<span class="w"> </span>run<span class="w"> </span>-p<span class="w"> </span><span class="m">8000</span>:8000<span class="w"> </span>--env-file<span class="w"> </span>.env<span class="w"> </span>transformer-rag:latest
-</pre></div>
-</div>
-</section>
 <section id="troubleshooting-installation">
 <h2>Troubleshooting Installation<a class="headerlink" href="#troubleshooting-installation" title="Link to this heading"></a></h2>
 <p><strong>Problem: “Python not found”</strong></p>
 <p>Solution: Install Python from <a class="reference external" href="https://python.org">python.org</a> or use a package manager:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># macOS with Homebrew</span>
-brew<span class="w"> </span>install<span class="w"> </span>python3
-
-<span class="c1"># Windows with Chocolatey</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Windows with Chocolatey</span>
 choco<span class="w"> </span>install<span class="w"> </span>python
 </pre></div>
 </div>
