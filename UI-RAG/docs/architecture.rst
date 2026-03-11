@@ -27,7 +27,7 @@ The system consists of three main layers:
             ▼                  ▼                  ▼
     ┌──────────────────┐ ┌───────────────────┐ ┌────────────────┐
     │ Azure Services   │ │ Vector Database   │ │ Storage Layer  │
-    │ - DI (Extract)   │ │ - AI Search       │ │ - Blob Storage │
+    │ - DI (Extract)   │ │                   │ │ - Blob Storage │
     │ - OpenAI (RAG)   │ │ - FAISS (Local)   │ │ - Containers   │
     └──────────────────┘ └───────────────────┘ └────────────────┘
 
@@ -40,7 +40,7 @@ When a user uploads documents:
 
 .. code-block:: text
 
-    Upload File (PDF/DOCX/XLSX)
+    Upload File (PDF)
              ↓
     FastAPI Endpoint validates
              ↓
@@ -49,7 +49,7 @@ When a user uploads documents:
     Upload to Azure Blob Storage
 
 **File Validation:**
-- Extension check (.pdf, .docx, .xlsx)
+- Extension check (.pdf)
 - Size validation (max 100 MB)
 - Content type verification
 - Duplicate detection (MD5 hash)
@@ -80,15 +80,7 @@ Azure Document Intelligence extracts structure:
 - ``tables``: Structured table data with cells
 - ``bounding_regions``: Spatial coordinates
 
-**Image Page Detection:**
-
-For PDFs, system detects image-heavy pages:
-- Convert PDF to images
-- Calculate pixel variance
-- Flag low-text pages for manual review
-- Extract minimal text from images
-
-**3. Semantic Chunking** (``chunk_by_title_semantic_blob.py``)
+**2. Semantic Chunking** (``chunk_by_title_semantic_blob.py``)
 
 Intelligently splits documents while preserving structure:
 
