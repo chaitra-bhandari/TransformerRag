@@ -30,4 +30,4 @@ Configuration
 GitHub
 ------
 
-`View source code <https://github.com/chaitra-bhandari/TransformerRag/blob/main/rag_query.py>`_
+`View source code <https://github.com/chaitra-bhandari/TransformerRag/blob/main/UI-RAG/rag_query.py>`_
