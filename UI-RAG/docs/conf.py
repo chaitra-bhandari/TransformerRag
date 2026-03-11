@@ -4,33 +4,59 @@ import os
 from pathlib import Path
 from datetime import datetime
 
-# DEBUG: Show what path we're using
-print(f"Current file: {__file__}")
-print(f"Current dir: {os.getcwd()}")
+# ============================================================================
+# PATH SETUP - Handle both local and ReadTheDocs environments
+# ============================================================================
 
 # Get the absolute path to the project root
-# conf.py is in docs/, so we go up one level (..)
-project_root = str(Path(__file__).parent.parent.absolute())
+docs_dir = Path(__file__).parent.absolute()
+project_root = docs_dir.parent.absolute()
+
+print(f"\n{'='*70}")
+print(f"SPHINX CONFIGURATION")
+print(f"{'='*70}")
+print(f"Docs directory: {docs_dir}")
 print(f"Project root: {project_root}")
 
-# Add to Python path so imports work
-sys.path.insert(0, project_root)
+# Add to Python path
+sys.path.insert(0, str(project_root))
 print(f"Added to sys.path: {project_root}")
-print(f"Python path[0]: {sys.path[0]}")
 
-# Verify app.py exists
-app_path = os.path.join(project_root, 'app.py')
-print(f"Looking for app.py at: {app_path}")
-print(f"app.py exists: {os.path.exists(app_path)}")
+# ============================================================================
+# VERIFY PYTHON FILES EXIST
+# ============================================================================
 
-# Project information
+python_files = [
+    'app.py',
+    'rag_query.py',
+    'doc_extraction_using_di.py',
+    'chunk_by_title_semantic_blob.py',
+    'doc_filling_blob.py'
+]
+
+print(f"\nChecking Python files:")
+for py_file in python_files:
+    filepath = project_root / py_file
+    exists = filepath.exists()
+    status = "✓" if exists else "✗"
+    print(f"  {status} {py_file}")
+
+print(f"{'='*70}\n")
+
+# ============================================================================
+# PROJECT INFORMATION
+# ============================================================================
+
 project = 'Transformer Spec RAG'
 author = 'Your Team'
 copyright = f'{datetime.now().year}, Your Team'
 release = '1.0.0'
 version = '1.0'
 
-# Sphinx extensions
+# ============================================================================
+# SPHINX EXTENSIONS
+# ============================================================================
+
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
@@ -40,7 +66,10 @@ extensions = [
     'sphinx_rtd_theme',
 ]
 
-# Napoleon settings for docstring parsing
+# ============================================================================
+# NAPOLEON SETTINGS (For Google/NumPy docstrings)
+# ============================================================================
+
 napoleon_google_docstring = True
 napoleon_numpy_docstring = True
 napoleon_include_init_with_doc = True
@@ -53,7 +82,10 @@ napoleon_use_ivar = False
 napoleon_use_param = True
 napoleon_use_rtype = True
 
-# Theme settings
+# ============================================================================
+# THEME SETTINGS
+# ============================================================================
+
 html_theme = 'sphinx_rtd_theme'
 html_theme_options = {
     'logo_only': False,
@@ -64,12 +96,15 @@ html_theme_options = {
     'style_nav_header_background': '#2980B9',
 }
 
-# Autodoc settings
+# ============================================================================
+# AUTODOC SETTINGS - THIS IS CRITICAL FOR SHOWING CODE
+# ============================================================================
+
 autodoc_member_order = 'bysource'
 autodoc_typehints = 'description'
 autodoc_typehints_format = 'short'
 
-# Autodoc default options - SHOW FULL CODE
+# Default options for all modules
 autodoc_default_options = {
     'members': True,
     'member-order': 'bysource',
@@ -79,8 +114,14 @@ autodoc_default_options = {
     'private-members': False,
 }
 
-# Mock imports for packages that might not be installed
+# ============================================================================
+# MOCK IMPORTS - CRITICAL FOR ReadTheDocs!
+# ============================================================================
+# ReadTheDocs doesn't have Azure packages installed
+# We need to mock them so autodoc doesn't fail on import
+
 autodoc_mock_imports = [
+    # Azure packages
     'azure',
     'azure.storage',
     'azure.storage.blob',
@@ -88,44 +129,86 @@ autodoc_mock_imports = [
     'azure.ai.formrecognizer',
     'azure.core',
     'azure.core.credentials',
+    'azure.identity',
+    
+    # ML/Vector packages
     'faiss',
     'numpy',
-    'openai',
-    'fastapi',
-    'docx',
+    'sentence_transformers',
+    'sklearn',
+    'scikit-learn',
+    
+    # Document processing
     'pdf2image',
     'PyPDF2',
+    'Pillow',
+    'PIL',
+    
+    # OpenAI
+    'openai',
+    
+    # Web framework
+    'fastapi',
+    'uvicorn',
+    'pydantic',
+    
+    # Document handling
+    'docx',
+    'python-docx',
+    
+    # Text processing
     'rank_bm25',
-    'sentence_transformers',
+    'bm25',
+    
+    # Other
+    'dotenv',
+    'requests',
+    'concurrent',
+    'pickle',
+    're',
 ]
 
-# HTML output settings
+# ============================================================================
+# HTML OUTPUT SETTINGS
+# ============================================================================
+
 html_static_path = []
 html_logo = None
 html_favicon = None
 
-# Exclude patterns
+# ============================================================================
+# EXCLUDE PATTERNS
+# ============================================================================
+
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '*.egg-info']
 
-# Source suffix
-source_suffix = '.rst'
+# ============================================================================
+# SOURCE & MASTER SETTINGS
+# ============================================================================
 
-# Master document
+source_suffix = '.rst'
 master_doc = 'index'
 
-# Language
-language = 'en'
+# ============================================================================
+# LANGUAGE & STYLE
+# ============================================================================
 
-# Pygments style
+language = 'en'
 pygments_style = 'sphinx'
 
-# HTML options
+# ============================================================================
+# HTML OPTIONS
+# ============================================================================
+
 html_use_smartypants = True
 html_last_updated_fmt = '%b %d, %Y'
 html_show_sourcelink = True
 html_show_sphinx = True
 
-# Intersphinx mapping
+# ============================================================================
+# INTERSPHINX MAPPING
+# ============================================================================
+
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
 }
