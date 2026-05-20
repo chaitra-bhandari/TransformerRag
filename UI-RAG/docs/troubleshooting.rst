@@ -243,8 +243,8 @@ Search index not created or not found.
 .. code-block:: bash
 
   
-BLOB_INDEX_CONTAINER=faiss-indexes
-BLOB_METADATA_CONTAINER=faiss-metadata
+   BLOB_INDEX_CONTAINER=faiss-indexes
+   BLOB_METADATA_CONTAINER=faiss-metadata
 
 Index files must be with the same names.
 
