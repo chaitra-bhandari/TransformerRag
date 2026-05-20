@@ -54,6 +54,7 @@ The system processes transformer specification documents through a multi-stage p
 3. **Vector Indexing** — FAISS vector search combined with BM25 hybrid retrieval
 4. **RAG Query** — Uses Azure OpenAI to extract specific transformer parameters
 5. **Document Generation** — Fills Word templates with extracted data
+6. **Evaluation** — RAGAS-based quality assessment using Azure OpenAI as judge and embeddings
 
 Key Features
 ~~~~~~~~~~~~
@@ -66,6 +67,7 @@ Key Features
 - ✅ Azure Blob Storage integration
 - ✅ FastAPI backend with CORS support
 - ✅ Real-time processing status updates
+- ✅ RAGAS evaluation with 4 quality metrics (faithfulness, answer correctness, context recall & precision)
 
 Quick Links
 ~~~~~~~~~~~
@@ -74,6 +76,7 @@ Quick Links
 - **Installation Guide**: :doc:`installation`
 - **API Reference**: :doc:`api/app`
 - **Configuration**: :doc:`configuration`
+- **Evaluation**: :doc:`evaluate_with_ragas`
 - **Troubleshooting**: :doc:`troubleshooting`
 
 Project Structure
@@ -82,17 +85,17 @@ Project Structure
 .. code-block:: text
 
    transformer-spec-rag/
-   ├── docs/                          # Documentation (this folder)
-   ├── app.py                         # FastAPI backend
-   ├── doc_extraction_using_di.py    # Document extraction module
-   ├── chunk_by_title_semantic_blob.py  # Chunking module
-   ├── rag_query.py                   # RAG query engine
-   ├── doc_filling_blob.py           # Document filling module
-   ├── Docflow_chatui.jsx            # React frontend
-   ├── requirements.txt               # Python dependencies
-   ├── .env.example                   # Example environment variables
-   └── .readthedocs.yaml             # ReadTheDocs configuration
-
+   ├── docs/                              # Documentation (this folder)
+   ├── app.py                             # FastAPI backend
+   ├── doc_extraction_using_di.py         # Document extraction module
+   ├── chunk_by_title_semantic_blob.py    # Chunking module
+   ├── rag_query.py                       # RAG query engine
+   ├── doc_filling_blob.py                # Document filling module
+   ├── evaluate_with_ragas.py             # RAGAS evaluation pipeline
+   ├── Docflow_chatui.jsx                 # React frontend
+   ├── requirements.txt                   # Python dependencies
+   ├── .env.example                       # Example environment variables
+   └── .readthedocs.yaml                  # ReadTheDocs configuration
 Installation
 ~~~~~~~~~~~~
 
