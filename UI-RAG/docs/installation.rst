@@ -349,9 +349,7 @@ Getting Help
 If you encounter issues:
 
 1. Check :doc:`troubleshooting`
-2. Review :doc:`faq`
-3. Check the `GitHub Issues <https://github.com/yourorg/transformer-spec-rag/issues>`__
-4. Contact the development team
+2. Contact the development team
 
 .. note::
 
