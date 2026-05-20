@@ -167,6 +167,12 @@ autodoc_mock_imports = [
     'concurrent',
     'pickle',
     're',
+
+     # RAGAS evaluation
+    'datasets',
+    'ragas',
+    'ragas.metrics',
+    
 ]
 
 # ============================================================================
