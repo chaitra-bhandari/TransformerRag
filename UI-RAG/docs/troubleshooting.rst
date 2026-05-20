@@ -340,25 +340,6 @@ RAG model retrieving incorrect chunks.
    - Remove noise/artifacts
    - Verify text is extractable
 
-**Problem: Slow response times**
-
-Query taking more than 5 seconds.
-
-**Solution:**
-
-1. Check network:
-   - Azure services may be slow
-   - Check Azure Portal metrics
-
-2. Optimize query:
-   - Reduce top_k parameter
-   - Use simpler questions
-
-3. Reduce index size:
-   - Archive old documents
-   - Remove duplicates
-   - Split large projects
-
 **Problem: "Temperature" parameter not affecting responses**
 
 Temperature setting ignored.
