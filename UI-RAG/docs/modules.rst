@@ -9,3 +9,4 @@ UI-RAG
    doc_extraction_using_di
    doc_filling_blob
    rag_query
+   evaluate_with_ragas    

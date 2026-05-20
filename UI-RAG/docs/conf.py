@@ -32,6 +32,7 @@ python_files = [
     'doc_extraction_using_di.py',
     'chunk_by_title_semantic_blob.py',
     'doc_filling_blob.py'
+    'evaluate_with_ragas.py'
 ]
 
 print(f"\nChecking Python files:")

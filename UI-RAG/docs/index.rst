@@ -28,6 +28,7 @@ This documentation provides complete information about the system architecture, 
    modules
    source_code
 
+
 .. toctree::
    :maxdepth: 2
    :caption: Configuration
