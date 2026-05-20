@@ -70,33 +70,23 @@ Your First Upload
 
 1. **Prepare a PDF document**
 
-   Use any PDF with text (PDFs scanned as images won't work well)
+   Use any PDF 
 
 2. **Go to the web interface**
 
-   Navigate to ``http://localhost:3000``
+   Navigate to ``http://localhost:8000``
 
-3. **Upload document**
+3. **Upload document and create the project**
 
    - Click "Upload Project"
    - Select project type: "standalone" or "combined"
    - Choose your PDF file
    - Click "Upload"
 
-4. **Monitor processing**
+4. **Download the document**
 
-   The system will:
-   - Extract content with Azure DI ≈ 30 seconds
-   - Chunk documents ≈ 10 seconds
-   - Generate embeddings ≈ 20 seconds
-   - Index in Azure AI Search ≈ 15 seconds
+   - Order documents
 
-5. **Query the documents**
-
-   Type a question in the chat interface:
-   - "What is the nominal voltage?"
-   - "Extract transformer specifications"
-   - "Generate specification document"
 
 Core Workflow
 =============
@@ -111,7 +101,7 @@ Core Workflow
            ↓
     4. Chunks converted to embeddings
            ↓
-    5. Stored in  Faiss index
+    5. Stored in Faiss index
            ↓
     6. System retrieves relevant chunks
            ↓
@@ -145,7 +135,6 @@ Using the Web Interface
 .. code-block:: text
 
     1. Enter Query
-       - Natural language questions
        - Specification extraction requests
        - Document generation requests
 
