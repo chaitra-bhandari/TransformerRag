@@ -273,8 +273,7 @@ Solution: Ensure virtual environment is activated:
 .. code-block:: bash
 
     # Activate environment
-    source venv/bin/activate  # macOS/Linux
-    # or
+  
     venv\Scripts\activate     # Windows
 
 **Problem: Azure authentication errors**
