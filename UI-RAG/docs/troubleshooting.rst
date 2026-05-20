@@ -372,8 +372,9 @@ Getting More Help
 
 
 .. code-block:: python
-    # Restart backend
-    uvicorn app:app --reload --log-level debug
+
+   # Restart backend
+   uvicorn app:app --reload --log-level debug
 
 
 
