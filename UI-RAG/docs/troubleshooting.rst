@@ -311,7 +311,7 @@ Missing or invalid API key.
 Query & RAG Issues
 ==================
 
-Problem: Wrong or irrelevant results
+**Problem: Wrong or irrelevant results**
 
 RAG model retrieving incorrect chunks.
 
