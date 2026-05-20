@@ -31,8 +31,9 @@ EMBEDDING_MODEL = "text-embedding-3-large"  # Embedding model
 # UTILITY FUNCTIONS
 # ==========================================
 
-# Normalizes any value (None / list / string) into a clean, stripped string.
-# Lists are joined with the given separator so RAGAS receives a single answer string.
+""" Normalizes any value (None / list / string) into a clean, stripped string.
+    Lists are joined with the given separator so RAGAS receives a single answer string.
+"""
 def convert_to_string(value, separator="\n"):
     """Convert array to string or keep as string"""
     if value is None:
@@ -44,8 +45,11 @@ def convert_to_string(value, separator="\n"):
     return str(value).strip()
 
 
-# Checks one test-case dict for required fields (question, contexts, answer, ground_truth)
-# and returns a normalized copy. Returns (is_valid, cleaned_item, error_message).
+"""
+Checks one test-case dict for required fields (question, contexts, answer, ground_truth)
+and returns a normalized copy. Returns (is_valid, cleaned_item, error_message).
+"""
+
 def validate_item(item):
     """Validate and convert item"""
     param_name = item.get("param_name", "unknown")
@@ -78,13 +82,13 @@ def validate_item(item):
     return True, converted, None
 
 
-# ==========================================
-# MAIN EXECUTION
-# ==========================================
 
-# Orchestrates the full 8-step evaluation pipeline:
-# validate creds -> load JSON -> validate items -> build Dataset ->
-# init Azure judge & embeddings -> run RAGAS -> display -> save reports.
+
+ """
+ Orchestrates the full 8-step evaluation pipeline:
+ validate creds -> load JSON -> validate items -> build Dataset ->
+ init Azure judge & embeddings -> run RAGAS -> display -> save reports.
+ """
 def main():
     """Main evaluation function"""
     
