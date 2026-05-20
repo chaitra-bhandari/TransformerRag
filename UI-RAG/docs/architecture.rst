@@ -7,7 +7,7 @@ Transformer Spec RAG is built on a modular, cloud-native architecture designed f
 System Overview
 ===============
 
-The system consists of three main layers:
+The system consists of four main layers:
 
 .. code-block:: text
 
@@ -28,9 +28,15 @@ The system consists of three main layers:
     ┌──────────────────┐ ┌───────────────────┐ ┌────────────────┐
     │ Azure Services   │ │ Vector Database   │ │ Storage Layer  │
     │ - DI (Extract)   │ │  - FAISS (Local)  │ │ - Blob Storage │
-    │ - DI (Extract)   │ │                   │ │ - Blob Storage │
-    │ - OpenAI (RAG)   │ │                   │ │ - Containers   │
+    │ - OpenAI (RAG)   │ │  - BM25 (Keyword) │ │ - Containers   │
     └──────────────────┘ └───────────────────┘ └────────────────┘
+
+    ───────────────── Offline Quality Layer ─────────────────
+    ┌─────────────────────────────────────────────────────────────┐
+    │              evaluate_with_ragas.py (Standalone)            │
+    │  RAGAS metrics · Azure OpenAI judge LLM · Azure embeddings  │
+    │  Input: manual_test_cases.json → Output: CSV / JSON / TXT   │
+    └─────────────────────────────────────────────────────────────┘
 
 Core Processing Pipeline
 =========================
@@ -81,7 +87,7 @@ Azure Document Intelligence extracts structure:
 - ``tables``: Structured table data with cells
 - ``bounding_regions``: Spatial coordinates
 
-**2. Semantic Chunking** (``chunk_by_title_semantic_blob.py``)
+**3. Semantic Chunking** (``chunk_by_title_semantic_blob.py``)
 
 Intelligently splits documents while preserving structure:
 
@@ -137,7 +143,7 @@ Intelligently splits documents while preserving structure:
 - Company headers: "ENERGINET"
 - Footer text: "taking power further"
 
-**4. Vector Embedding & FAISS Indexing** (rag_query.py)
+**4. Vector Embedding & FAISS Indexing** (``rag_query.py``)
 
 Converts chunks to semantic vectors and stores in FAISS:
 
@@ -163,10 +169,10 @@ Converts chunks to semantic vectors and stores in FAISS:
 .. code-block:: python
 
     chunk_text = "Technical Specifications: Voltage 400 kV, capacity 100 MVA..."
-    
+
     # Convert to vector (3072 dimensions)
     vector = openai_embeddings.embed_query(chunk_text)
-    
+
     # Store in index
     search_index.upload_documents([{
         'id': 'chunk_123',
@@ -175,23 +181,13 @@ Converts chunks to semantic vectors and stores in FAISS:
         'metadata': {...}
     }])
 
-**5. FAISS Indexing**
+**FAISS Storage:**
 
-Stores vectors in FAISS for fast retrieval:
+- Index file (``.index``) → fast approximate nearest neighbor search
+- Metadata pickle (``.pkl``) → chunk lookup by id
+- Both stored in Azure Blob Storage for persistence
 
-.. code-block:: text
-
-    Chunks + Vectors
-         ↓
-    FAISS Index Creation
-    - Create index for fast search
-    - Use approximate nearest neighbors
-    - Store in Azure Blob Storage
-    - Backup metadata separately
-         ↓
-    Ready for queries
-
-**6. Query Processing** (``rag_query.py`` - Core Module)
+**5. Query Processing** (``rag_query.py`` - Core Module)
 
 When user asks a question:
 
@@ -201,11 +197,11 @@ When user asks a question:
          ↓
     Convert to embedding (same model as chunks)
          ↓
-    Search FAISS Index:
-    - Fast approximate nearest neighbor search
-    - Retrieve top-K results (default: 20)
-    - BM25 hybrid search for keyword matching
-    - CrossEncoder reranking for relevance
+    Hybrid Search:
+    - FAISS vector search (top-K = 20)
+    - BM25 keyword search
+    - Weighted combination (vector 0.6 / BM25 0.4)
+    - CrossEncoder reranking → top 10
          ↓
     Retrieved Chunks:
     [
@@ -216,7 +212,7 @@ When user asks a question:
          ↓
     Pass to RAG model
 
-**7. RAG Generation**
+**6. RAG Generation**
 
 Uses OpenAI GPT-4 to synthesize answer:
 
@@ -233,7 +229,7 @@ Uses OpenAI GPT-4 to synthesize answer:
          ↓
     Generated results as JSON
          ↓
-     Json used to fill documents
+    JSON used to fill documents
          ↓
     Return to user
 
@@ -242,7 +238,7 @@ Uses OpenAI GPT-4 to synthesize answer:
 - Higher temperature (0.7) for synthesis tasks
 - Top-p sampling for diversity control
 
-**8. Document Generation** (``doc_filling_blob.py``)
+**7. Document Generation** (``doc_filling_blob.py``)
 
 Creates output .docx files:
 
@@ -278,6 +274,45 @@ Creates output .docx files:
       "RATED_VOLTAGE": "400"
     }
     Output: "Unit-01: 400 kV"
+
+**8. Quality Evaluation** (``evaluate_with_ragas.py``)
+
+Runs offline, separate from the live request path. Measures how well the RAG
+system retrieves relevant contexts and generates correct answers.
+
+.. code-block:: text
+
+    manual_test_cases.json
+       (question, contexts, answer, ground_truth)
+            ↓
+    Validate & normalize each test case
+       (skip items missing required fields)
+            ↓
+    Build RAGAS Dataset
+            ↓
+    Initialize Azure OpenAI components:
+       ├─ Judge LLM (gpt-4o-mini, temperature=0)
+       └─ Embeddings (text-embedding-3-large)
+            ↓
+    Run four RAGAS metrics:
+       ├─ context_recall      (are relevant chunks present?)
+       ├─ context_precision   (are retrieved chunks actually relevant?)
+       ├─ faithfulness        (is the answer grounded in context?)
+       └─ answer_correctness  (does the answer match ground truth?)
+            ↓
+    Display per-parameter scores in terminal
+            ↓
+    Write three timestamped reports:
+       ├─ ragas_evaluation_detailed_<ts>.csv
+       ├─ ragas_results_<ts>.json
+       └─ ragas_summary_<ts>.txt
+
+**Why a separate pipeline?**
+
+- Evaluation is **offline**: it should not slow down live user requests.
+- Each test case fires multiple judge LLM calls (one per metric). Running this
+  inline would multiply per-request latency and cost.
+- Test cases are curated manually and versioned independently of production traffic.
 
 Data Flow Diagram
 =================
@@ -337,13 +372,13 @@ Complete data journey through the system:
              ▼
     ┌──────────────────────────┐
     │  Index in FAISS          │
-    │    (stored in blob       │
+    │    (stored in blob)      │
     │  - Store vectors         │
     │  - Index metadata        │
     └────────┬─────────────────┘
              │
              ▼ (Ready for document generation)
-    
+
     ┌──────────────────────────┐
     │  User Question           │
     │ (Generate order document)│
@@ -391,6 +426,46 @@ Complete data journey through the system:
     │  Final .docx Document    │
     └──────────────────────────┘
 
+**Offline Evaluation Flow** (separate from live request path):
+
+.. code-block:: text
+
+    ┌──────────────────────────┐
+    │ manual_test_cases.json   │
+    │ (curated test cases)     │
+    └────────┬─────────────────┘
+             │
+             ▼
+    ┌──────────────────────────┐
+    │ evaluate_with_ragas.py   │
+    │ - Validate items         │
+    │ - Build RAGAS Dataset    │
+    └────────┬─────────────────┘
+             │
+             ▼
+    ┌──────────────────────────┐
+    │ Azure OpenAI             │
+    │ - Judge LLM              │
+    │ - Embeddings             │
+    └────────┬─────────────────┘
+             │
+             ▼
+    ┌──────────────────────────┐
+    │ RAGAS metrics            │
+    │ - context_recall         │
+    │ - context_precision      │
+    │ - faithfulness           │
+    │ - answer_correctness     │
+    └────────┬─────────────────┘
+             │
+             ▼
+    ┌──────────────────────────┐
+    │ Reports (local files)    │
+    │ - detailed CSV           │
+    │ - results JSON           │
+    │ - summary TXT            │
+    └──────────────────────────┘
+
 Database & Storage Architecture
 ================================
 
@@ -424,12 +499,9 @@ Database & Storage Architecture
     │   └── ProjectB/
     │       └── Order_A_unit1.docx
     │
-    ├── order-templates/                # Document templates
-    │   ├── Order_A.docx
-    │   └── Order_B.docx
-    │
-    └── chunked-output/
-        └── all_chunks.json
+    └── order-templates/                # Document templates
+        ├── Order_A.docx
+        └── Order_B.docx
 
 **FAISS Index Storage Structure**
 
@@ -437,12 +509,10 @@ Database & Storage Architecture
 
     storage-account/
     ├── faiss-indexes/                  ← FAISS vector indexes
-    │   ├── docs.index
-    │  
+    │   └── docs.index
     │
     └── faiss-metadata/                 ← Chunk metadata for lookup
-        ├── docs.pkl
-        
+        └── docs.pkl
 
 **FAISS Index Format**
 
@@ -450,9 +520,8 @@ Database & Storage Architecture
 
     {
       "embeddings": [
-        [0.123, -0.456, 0.789, ...],  // 3072-dim vectors
-        [0.234, -0.567, 0.890, ...],
-        ...
+        [0.123, -0.456, 0.789, ...],
+        [0.234, -0.567, 0.890, ...]
       ],
       "metadata": [
         {
@@ -460,10 +529,25 @@ Database & Storage Architecture
           "content": "Specification text...",
           "page": 1,
           "source_document": "spec.pdf"
-        },
-        ...
+        }
       ]
     }
+
+**Evaluation Output (Local Filesystem)**
+
+``evaluate_with_ragas.py`` writes its reports to the **current working directory**
+(not Blob Storage), since evaluation is an operator workflow rather than a
+production artifact:
+
+.. code-block:: text
+
+    project-root/
+    ├── ragas_evaluation_detailed_<timestamp>.csv   # Per-parameter scores
+    ├── ragas_results_<timestamp>.json              # Full metrics + summary
+    └── ragas_summary_<timestamp>.txt               # Human-readable report
+
+For long-term tracking, copy these files into a versioned ``evaluation/`` folder
+or upload them to a dedicated Blob container.
 
 API Layer Architecture
 ======================
@@ -479,6 +563,14 @@ API Layer Architecture
     /project-status         → GET   (Processing status)
     /download/{doc_id}      → GET   (Download document)
     /health                 → GET   (Health check)
+
+.. note::
+
+    The RAGAS evaluation script is **not** exposed as an API endpoint. It runs
+    standalone from the command line because it is operator-driven and
+    long-running. If you need scheduled or on-demand evaluation via the API,
+    wrap ``evaluate_with_ragas.main()`` in a background task (Celery, FastAPI
+    ``BackgroundTasks``, or an Azure Function).
 
 **Authentication & Security**
 
@@ -568,6 +660,13 @@ Scalability Considerations
 - Index query caching
 - Async/await for I/O operations
 
+**Evaluation Throughput**
+- RAGAS evaluation cost scales linearly with test cases × metrics (≈4 calls / item)
+- Use ``gpt-4o-mini`` instead of ``gpt-4o`` for the judge to reduce cost ~10×
+- Run evaluation on a separate Azure OpenAI deployment to avoid contending with
+  production query quota
+- Schedule nightly or per-release evaluation runs rather than per-commit
+
 
 Deployment Architecture
 =======================
@@ -576,11 +675,13 @@ Deployment Architecture
 - Local FastAPI server
 - Local Blob emulator (optional)
 - Cloud AI services
+- ``evaluate_with_ragas.py`` run from terminal with manual test set
 
 **Staging**
 - Docker container on Azure Container Instances
 - Azure services (full scale)
 - Staging data containers
+- Evaluation triggered manually before promoting to production
 
 **Production**
 - Azure App Service or Container Instances
@@ -588,6 +689,7 @@ Deployment Architecture
 - Auto-scaling based on queue depth
 - Backup and disaster recovery
 - Monitoring and alerting
+- Scheduled evaluation job (Azure Function / cron) writing reports to a dedicated container
 
 See :doc:`deployment` for detailed setup instructions.
 
@@ -597,3 +699,4 @@ Next Steps
 - Read :doc:`pipeline_flow` for detailed workflow
 - Explore :doc:`modules/index` for module details
 - Check :doc:`api/endpoints` for API reference
+- See :doc:`evaluate_with_ragas` for RAGAS evaluation setup
