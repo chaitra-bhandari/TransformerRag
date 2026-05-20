@@ -71,8 +71,6 @@ This installs:
 - **azure-search-documents** - AI Search client
 - **openai** - OpenAI API client
 - **faiss-cpu** - Vector search (use faiss-gpu for GPU acceleration)
-- **pdf2image** - PDF image conversion
-- **PyPDF2** - PDF processing
 - **python-dotenv** - Environment variable management
 - **ragas** - RAG evaluation framework
 - **datasets** - HuggingFace datasets (required by RAGAS)
@@ -89,8 +87,6 @@ Dependencies Breakdown
     azure-ai-formrecognizer>=3.3.0      # Document Intelligence
     azure-storage-blob>=12.18.0         # Blob Storage
     azure-search-documents>=11.4.0      # AI Search
-    pdf2image>=1.16.0                   # PDF conversion
-    PyPDF2>=3.0.0                       # PDF tools
     numpy>=1.24.0                       # Numerical computing
 
 **Vector Search:**
@@ -197,11 +193,6 @@ Then verify the evaluation stack:
 
     python -c "import ragas; import datasets; from langchain_openai import AzureChatOpenAI; print('✓ RAGAS evaluation stack ready!')"
 
-Or run the test suite:
-
-.. code-block:: bash
-
-    pytest tests/ -v
 
 Step 6: Start the Application
 ==============================
@@ -219,15 +210,7 @@ You should see:
     INFO:     Uvicorn running on http://0.0.0.0:8000
     INFO:     Application startup complete
 
-**Frontend (React):**
 
-In a new terminal:
-
-.. code-block:: bash
-
-    cd frontend
-    npm install
-    npm start
 
 The React app will open at ``http://localhost:3000``
 
