@@ -15,6 +15,7 @@ Project Structure
     ├── doc_extraction_using_di.py          # Document Intelligence
     ├── chunk_by_title_semantic_blob.py     # Semantic chunking
     ├── doc_filling_blob.py                 # Document generation
+    ├── evaluate_with_ragas.py              # RAGAS evaluation pipeline
     ├── Docflow_chatui.jsx                  # React chat interface
     ├── Index.HTML                          # Frontend HTML
     └── .env.template                       # Environment variables
@@ -60,6 +61,13 @@ Core Modules
    - File upload UI
    - Query processing
    - Results display
+
+7. **evaluate_with_ragas.py** - RAGAS Evaluation
+   - Azure OpenAI judge LLM
+   - Azure OpenAI embeddings
+   - Four quality metrics (faithfulness, answer correctness, context recall & precision)
+   - Per-parameter scoring
+   - CSV / JSON / text report output
 
 Key Source Files
 ================
@@ -303,6 +311,97 @@ doc_filling_blob.py
     {{FREQUENCY}}
     {{EFFICIENCY}}
 
+evaluate_with_ragas.py
+----------------------
+
+**RAGAS-based Evaluation Pipeline**
+
+Evaluates the quality of the RAG system by running RAGAS metrics against a set of
+test cases (question, retrieved contexts, generated answer, ground truth). Uses
+Azure OpenAI both as the judge LLM and as the embeddings provider.
+
+.. code-block:: python
+
+    from datasets import Dataset
+    from ragas import evaluate
+    from ragas.metrics import (
+        context_recall,
+        context_precision,
+        faithfulness,
+        answer_correctness,
+    )
+    from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
+
+**Configuration:**
+
+.. code-block:: python
+
+    INPUT_FILE = "manual_test_cases.json"  # Test cases (list of dicts)
+    
+    OPENAI_KEY = ""                         # Azure OpenAI key
+    OPENAI_ENDPOINT = ""                    # Azure endpoint
+    CHAT_MODEL = "gpt-4o-mini"              # Judge LLM
+    EMBEDDING_MODEL = "text-embedding-3-large"  # Embeddings
+
+**Key Functions:**
+
+.. code-block:: python
+
+    def convert_to_string(value, separator="\n"):
+        """Normalize a value (str | list | None) to a stripped string."""
+    
+    def validate_item(item):
+        """Validate a single test-case dict.
+        Returns (is_valid, normalized_item, error_msg).
+        """
+    
+    def main():
+        """Run the 8-step evaluation pipeline:
+        validate credentials -> load JSON -> validate items ->
+        build Dataset -> init Azure judge & embeddings ->
+        run RAGAS metrics -> display results -> save reports.
+        """
+
+**Input Format:**
+
+.. code-block:: json
+
+    [
+      {
+        "param_name": "rated_voltage",
+        "question": "What is the rated voltage of the transformer?",
+        "contexts": ["The transformer is rated at 132 kV..."],
+        "answer": "132 kV",
+        "ground_truth": "132 kV"
+      }
+    ]
+
+**Metrics Evaluated:**
+
+- ``context_recall`` — Are all relevant chunks present in contexts?
+- ``context_precision`` — Are the retrieved chunks actually relevant?
+- ``faithfulness`` — Is the answer grounded in the contexts?
+- ``answer_correctness`` — Does the answer match the ground truth?
+
+All scored 0.0 (worst) to 1.0 (best).
+
+**Output Files (timestamped per run):**
+
+.. code-block:: text
+
+    ragas_evaluation_detailed_<timestamp>.csv    # Per-parameter scores
+    ragas_results_<timestamp>.json               # Full results + summary
+    ragas_summary_<timestamp>.txt                # Human-readable summary
+
+**Running the Evaluation:**
+
+.. code-block:: bash
+
+    # Set credentials in the script, then:
+    python evaluate_with_ragas.py
+
+See: :doc:`evaluate_with_ragas` for complete documentation
+
 Docflow_chatui.jsx
 -------------------
 
@@ -395,6 +494,12 @@ Dependencies
     PyPDF2>=3.0.0
     python-docx>=0.8.11
     
+    # Evaluation (RAGAS)
+    ragas>=0.1.0
+    datasets>=2.14.0
+    langchain-openai>=0.0.5
+    pandas>=2.0.0
+    
     # Utilities
     numpy>=1.24.0
     python-dotenv>=1.0.0
@@ -454,6 +559,12 @@ Data Flow
               ↓
     Response to Frontend
 
+    ─── Offline Quality Loop ───
+    evaluate_with_ragas.py
+       ├─ Loads test cases (JSON)
+       ├─ Runs RAGAS metrics with Azure OpenAI
+       └─ Outputs CSV / JSON / summary reports
+
 Key Implementation Details
 ==========================
 
@@ -508,6 +619,44 @@ Key Implementation Details
         temperature=0.3
     )
 
+**RAGAS Evaluation (evaluate_with_ragas.py)**
+
+.. code-block:: python
+
+    # Build Dataset from validated test cases
+    dataset = Dataset.from_list([
+        {
+            "question": item["question"],
+            "contexts": item["contexts"],
+            "answer": item["answer"],
+            "ground_truth": item["ground_truth"],
+        }
+        for item in prepared
+    ])
+    
+    # Initialize Azure judge + embeddings
+    judge_llm = AzureChatOpenAI(
+        azure_endpoint=OPENAI_ENDPOINT,
+        api_key=OPENAI_KEY,
+        api_version="2024-02-15-preview",
+        model=CHAT_MODEL,
+        temperature=0,
+    )
+    embeddings = AzureOpenAIEmbeddings(
+        azure_endpoint=OPENAI_ENDPOINT,
+        api_key=OPENAI_KEY,
+        api_version="2024-02-15-preview",
+        model=EMBEDDING_MODEL,
+    )
+    
+    # Run the four RAGAS metrics
+    result = evaluate(
+        dataset=dataset,
+        metrics=[context_recall, context_precision, faithfulness, answer_correctness],
+        llm=judge_llm,
+        embeddings=embeddings,
+    )
+
 Module Relationships
 ====================
 
@@ -528,6 +677,12 @@ Module Relationships
     │
     └── Calls: doc_filling_blob.py
         └── Outputs: .docx file
+
+    evaluate_with_ragas.py (Standalone / Offline)
+    ├── Reads: test cases JSON
+    ├── Uses: RAGAS
+    ├── Uses: Azure OpenAI (judge + embeddings)
+    └── Outputs: CSV, JSON, and summary reports
 
 Development Tips
 ================
@@ -569,6 +724,19 @@ Development Tips
       -H "Content-Type: application/json" \
       -d '{"question": "What is the voltage?", "project_folder": "ProjectA"}'
 
+**Running RAGAS Evaluation**
+
+.. code-block:: bash
+
+    # Make sure Azure credentials are set in evaluate_with_ragas.py
+    python evaluate_with_ragas.py
+    
+    # Inspect results
+    ls ragas_*
+    # ragas_evaluation_detailed_<timestamp>.csv
+    # ragas_results_<timestamp>.json
+    # ragas_summary_<timestamp>.txt
+
 Performance Considerations
 ==========================
 
@@ -591,10 +759,18 @@ Performance Considerations
     RETRIEVAL_K = 50
     RERANK_TOP_K = 20
 
+**evaluate_with_ragas.py Throughput**
+
+- Each test case triggers multiple judge LLM calls (one per metric)
+- Typical cost: ~4–8 Azure OpenAI calls per item
+- A 25-item run takes ~3–5 minutes on ``gpt-4o-mini``
+- To speed up: reduce the number of metrics, or use a smaller judge model
+
 Next Steps
 ==========
 
 - :doc:`modules/rag_query` - Complete RAG module documentation
+- :doc:`evaluate_with_ragas` - RAGAS evaluation documentation
 - :doc:`api/endpoints` - API implementation
 - :doc:`architecture` - System overview
 - :doc:`quickstart` - Get started
