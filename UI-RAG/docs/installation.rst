@@ -16,7 +16,7 @@ Before you begin, ensure you have:
   - Azure Storage Account
   - Azure Document Intelligence
   - Azure AI Search
-  - Azure OpenAI (or OpenAI API key)
+  - Azure OpenAI (or OpenAI API key) — with both a **chat model** deployment (e.g. ``gpt-4o``, ``gpt-4o-mini``) and an **embedding model** deployment (e.g. ``text-embedding-3-large``)
 
 Check Your Python Version
 ==========================
@@ -74,6 +74,10 @@ This installs:
 - **pdf2image** - PDF image conversion
 - **PyPDF2** - PDF processing
 - **python-dotenv** - Environment variable management
+- **ragas** - RAG evaluation framework
+- **datasets** - HuggingFace datasets (required by RAGAS)
+- **langchain-openai** - LangChain wrappers for Azure OpenAI (judge LLM + embeddings)
+- **pandas** - Used by ``evaluate_with_ragas.py`` for result tables and CSV export
 
 Dependencies Breakdown
 ======================
@@ -113,6 +117,15 @@ Dependencies Breakdown
     openai>=1.3.0                       # OpenAI GPT-4
     python-dotenv>=1.0.0                # Environment variables
 
+**Evaluation (RAGAS):**
+
+.. code-block:: text
+
+    ragas>=0.1.0                        # RAG evaluation framework
+    datasets>=2.14.0                    # HuggingFace dataset wrapper
+    langchain-openai>=0.0.5             # Azure judge LLM + embeddings
+    pandas>=2.0.0                       # Result tables & CSV export
+
 **Development:**
 
 .. code-block:: text
@@ -147,13 +160,25 @@ Create a ``.env`` file in the project root with your Azure and API credentials:
     BLOB_DESIGN_DOCS_CONTAINER=order-design-documents
     BLOB_TEMPLATE_CONTAINER=order-templates
 
-    # OpenAI
+    # OpenAI (used by RAG pipeline AND RAGAS evaluation)
     OPENAI_KEY=sk-your_openai_key
     OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
     CHAT_MODEL=gpt-4o
+    EMBEDDING_MODEL=text-embedding-3-large
+
+    # RAGAS Evaluation (optional — defaults shown)
+    RAGAS_JUDGE_MODEL=gpt-4o-mini       # Smaller/cheaper for judge calls
+    RAGAS_INPUT_FILE=manual_test_cases.json
 
     # API Security
     API_KEY=your_secret_api_key
+
+.. note::
+
+    ``evaluate_with_ragas.py`` currently reads credentials from constants at the
+    top of the script rather than from ``.env``. After cloning, open the file and
+    paste your ``OPENAI_KEY`` and ``OPENAI_ENDPOINT`` there. Never commit those
+    values to GitHub.
 
 See :doc:`configuration` for detailed environment setup instructions.
 
@@ -164,7 +189,13 @@ Test if everything is installed correctly:
 
 .. code-block:: bash
 
-    python -c "import fastapi; import azure; import openai; print('✓ All imports successful!')"
+    python -c "import fastapi; import azure; import openai; print('✓ Core imports successful!')"
+
+Then verify the evaluation stack:
+
+.. code-block:: bash
+
+    python -c "import ragas; import datasets; from langchain_openai import AzureChatOpenAI; print('✓ RAGAS evaluation stack ready!')"
 
 Or run the test suite:
 
@@ -199,6 +230,35 @@ In a new terminal:
     npm start
 
 The React app will open at ``http://localhost:3000``
+
+Step 7: (Optional) Run RAGAS Evaluation
+========================================
+
+Once your RAG pipeline is running, you can measure its quality with RAGAS.
+
+1. Prepare a JSON file of test cases (see :doc:`evaluate_with_ragas` for the schema)::
+
+       manual_test_cases.json
+
+2. Open ``evaluate_with_ragas.py`` and confirm your Azure credentials are set
+   in the configuration block at the top of the file.
+
+3. Run the evaluation:
+
+   .. code-block:: bash
+
+       python evaluate_with_ragas.py
+
+4. Three timestamped report files are written to the current directory:
+
+   .. code-block:: text
+
+       ragas_evaluation_detailed_<timestamp>.csv
+       ragas_results_<timestamp>.json
+       ragas_summary_<timestamp>.txt
+
+   Open the CSV in Excel for per-parameter scores across all four metrics
+   (faithfulness, answer correctness, context recall, context precision).
 
 Troubleshooting Installation
 ============================
@@ -248,6 +308,30 @@ Solution: Install CPU or GPU version:
     # GPU version (requires CUDA)
     pip install faiss-gpu
 
+**Problem: "No module named 'ragas'" or "No module named 'datasets'"**
+
+Solution: Install the evaluation dependencies:
+
+.. code-block:: bash
+
+    pip install ragas datasets langchain-openai pandas
+
+If the install fails on Windows due to a heavy transitive dependency,
+upgrade pip and setuptools first:
+
+.. code-block:: bash
+
+    python -m pip install --upgrade pip setuptools wheel
+    pip install ragas datasets langchain-openai pandas
+
+**Problem: RAGAS evaluation hangs or rate-limits**
+
+Solution: RAGAS makes multiple judge LLM calls per test case (one per metric).
+On Azure OpenAI free or low-tier deployments, you can hit quota limits quickly.
+Either upgrade your Azure quota, reduce the number of test cases, or switch
+``CHAT_MODEL`` in ``evaluate_with_ragas.py`` to a cheaper/faster model like
+``gpt-4o-mini``.
+
 Next Steps
 ==========
 
@@ -257,6 +341,7 @@ After installation:
 2. Follow the :doc:`quickstart` guide
 3. Explore the :doc:`api/index` documentation
 4. Review :doc:`architecture` for system design
+5. Measure RAG quality with :doc:`evaluate_with_ragas`
 
 Getting Help
 ============
