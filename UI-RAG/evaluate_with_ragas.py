@@ -31,9 +31,9 @@ EMBEDDING_MODEL = "text-embedding-3-large"  # Embedding model
 # UTILITY FUNCTIONS
 # ==========================================
 
-""" Normalizes any value (None / list / string) into a clean, stripped string.
-    Lists are joined with the given separator so RAGAS receives a single answer string.
-"""
+# Normalizes any value (None / list / string) into a clean, stripped string.
+#  Lists are joined with the given separator so RAGAS receives a single answer string.
+
 def convert_to_string(value, separator="\n"):
     """Convert array to string or keep as string"""
     if value is None:
