@@ -70,8 +70,6 @@ You likely skipped pip install or virtual environment not activated.
 .. code-block:: bash
 
     # Activate virtual environment
-    source venv/bin/activate  # macOS/Linux
-    # or
     venv\Scripts\activate     # Windows
 
     # Install dependencies
