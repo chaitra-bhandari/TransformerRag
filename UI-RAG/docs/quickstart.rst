@@ -225,10 +225,4 @@ Open browser console:
         print(f"✗ Azure Storage error: {e}")
 
 
-.. note::
 
-   First upload may take 1-2 minutes as the system creates indexes and embeddings. Subsequent uploads are faster.
-
-.. tip::
-
-   Start with a small, clean PDF to test. Once working, move to larger documents.
