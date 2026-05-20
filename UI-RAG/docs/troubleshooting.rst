@@ -371,6 +371,7 @@ Getting More Help
 - :doc:`../faq` - Common questions
 
 
+.. code-block:: python
     # Restart backend
     uvicorn app:app --reload --log-level debug
 
