@@ -211,9 +211,6 @@ You should see:
     INFO:     Application startup complete
 
 
-
-The React app will open at ``http://localhost:3000``
-
 Step 7: (Optional) Run RAGAS Evaluation
 ========================================
 
