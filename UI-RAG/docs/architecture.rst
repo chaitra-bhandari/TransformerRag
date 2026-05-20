@@ -641,57 +641,6 @@ Frontend Architecture
            ↓
     Display to User
 
-Scalability Considerations
-==========================
-
-**Vertical Scaling**
-- Increase Azure resource SKUs
-- Add more API replicas
-- Larger AI Search indexes
-
-**Horizontal Scaling**
-- Multiple FastAPI instances behind load balancer
-- Distributed task queue (Celery) for DI processing
-- Caching layer (Redis) for embeddings
-
-**Performance Optimizations**
-- Batch embedding processing
-- Chunk size optimization
-- Index query caching
-- Async/await for I/O operations
-
-**Evaluation Throughput**
-- RAGAS evaluation cost scales linearly with test cases × metrics (≈4 calls / item)
-- Use ``gpt-4o-mini`` instead of ``gpt-4o`` for the judge to reduce cost ~10×
-- Run evaluation on a separate Azure OpenAI deployment to avoid contending with
-  production query quota
-- Schedule nightly or per-release evaluation runs rather than per-commit
-
-
-Deployment Architecture
-=======================
-
-**Development**
-- Local FastAPI server
-- Local Blob emulator (optional)
-- Cloud AI services
-- ``evaluate_with_ragas.py`` run from terminal with manual test set
-
-**Staging**
-- Docker container on Azure Container Instances
-- Azure services (full scale)
-- Staging data containers
-- Evaluation triggered manually before promoting to production
-
-**Production**
-- Azure App Service or Container Instances
-- Load balancer
-- Auto-scaling based on queue depth
-- Backup and disaster recovery
-- Monitoring and alerting
-- Scheduled evaluation job (Azure Function / cron) writing reports to a dedicated container
-
-See :doc:`deployment` for detailed setup instructions.
 
 Next Steps
 ==========
