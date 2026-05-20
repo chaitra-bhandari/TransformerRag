@@ -226,6 +226,7 @@ Once your RAG pipeline is running, you can measure its quality with RAGAS.
 2. Open ``evaluate_with_ragas.py`` and confirm your Azure credentials are set
    in the configuration block at the top of the file.
 
+
 3. Run the evaluation:
 
    .. code-block:: bash
