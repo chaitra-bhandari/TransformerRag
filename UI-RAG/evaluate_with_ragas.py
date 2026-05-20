@@ -31,6 +31,8 @@ EMBEDDING_MODEL = "text-embedding-3-large"  # Embedding model
 # UTILITY FUNCTIONS
 # ==========================================
 
+# Normalizes any value (None / list / string) into a clean, stripped string.
+# Lists are joined with the given separator so RAGAS receives a single answer string.
 def convert_to_string(value, separator="\n"):
     """Convert array to string or keep as string"""
     if value is None:
@@ -42,6 +44,8 @@ def convert_to_string(value, separator="\n"):
     return str(value).strip()
 
 
+# Checks one test-case dict for required fields (question, contexts, answer, ground_truth)
+# and returns a normalized copy. Returns (is_valid, cleaned_item, error_message).
 def validate_item(item):
     """Validate and convert item"""
     param_name = item.get("param_name", "unknown")
@@ -53,10 +57,12 @@ def validate_item(item):
     if not contexts or not isinstance(contexts, list):
         return False, None, f"{param_name}: missing contexts"
     
+    # Convert list-form answers to a single string for RAGAS
     answer = convert_to_string(item.get("answer"))
     if not answer:
         return False, None, f"{param_name}: missing answer"
     
+    # Same normalization for the reference (ground truth) answer
     ground_truth = convert_to_string(item.get("ground_truth"))
     if not ground_truth:
         return False, None, f"{param_name}: missing ground_truth"
@@ -76,6 +82,9 @@ def validate_item(item):
 # MAIN EXECUTION
 # ==========================================
 
+# Orchestrates the full 8-step evaluation pipeline:
+# validate creds -> load JSON -> validate items -> build Dataset ->
+# init Azure judge & embeddings -> run RAGAS -> display -> save reports.
 def main():
     """Main evaluation function"""
     
@@ -90,6 +99,7 @@ def main():
     print("STEP 1: VALIDATING AZURE CREDENTIALS")
     print("-" * 80)
     
+    # Hard-fail early if Azure credentials weren't filled in at the top of the file
     if not OPENAI_KEY or not OPENAI_ENDPOINT:
         print("✗ ERROR: Azure credentials not set!")
         print("\nEdit the script and add your Azure credentials:")
@@ -111,6 +121,7 @@ def main():
     print(f"File: {INPUT_FILE}\n")
     
     try:
+        # Read and parse the test cases JSON file
         with open(INPUT_FILE, encoding="utf-8") as f:
             raw_data = json.load(f)
     except FileNotFoundError:
@@ -120,6 +131,7 @@ def main():
         print(f"✗ Invalid JSON: {e}")
         sys.exit(1)
     
+    # Top-level structure must be a JSON array (list of test-case dicts)
     if not isinstance(raw_data, list):
         print(f"✗ Expected list, got {type(raw_data).__name__}")
         sys.exit(1)
@@ -138,6 +150,7 @@ def main():
     prepared = []
     skipped = []
     
+    # Run validate_item on every test case; collect valid ones, track skipped ones with reasons
     for item in raw_data:
         is_valid, converted_item, error_msg = validate_item(item)
         if is_valid:
@@ -147,6 +160,7 @@ def main():
     
     print(f"✓ Converted {len(prepared)} items")
     if skipped:
+        # Show first 5 reasons items were skipped, plus a count of the rest
         print(f"⚠ Skipped {len(skipped)} items:")
         for skip in skipped[:5]:
             print(f"   - {skip}")
@@ -155,6 +169,7 @@ def main():
     else:
         print()
     
+    # Abort if nothing survived validation — RAGAS needs at least one valid sample
     if not prepared:
         print("✗ No valid items!")
         sys.exit(1)
@@ -166,6 +181,8 @@ def main():
     print("STEP 4: CREATING RAGAS DATASET")
     print("-" * 80)
     
+    # Build the HuggingFace Dataset object RAGAS expects:
+    # one row per test case with exactly these four fields
     dataset = Dataset.from_list([
         {
             "question": item["question"],
@@ -190,9 +207,10 @@ def main():
     embeddings = None
     
     try:
+        # langchain-openai provides the Azure-compatible wrappers RAGAS uses
         from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
         
-        # Initialize judge
+        # Build the judge LLM — temperature=0 for deterministic scoring
         print(f"Initializing judge LLM ({CHAT_MODEL})...")
         judge_llm = AzureChatOpenAI(
             azure_endpoint=OPENAI_ENDPOINT,
@@ -203,7 +221,7 @@ def main():
         )
         print(f"✓ Judge LLM initialized")
         
-        # Initialize embeddings
+        # Build the embeddings client — used by context_precision/recall for similarity
         print(f"Initializing embeddings ({EMBEDDING_MODEL})...")
         embeddings = AzureOpenAIEmbeddings(
             azure_endpoint=OPENAI_ENDPOINT,
@@ -242,6 +260,8 @@ def main():
     print("Status: Running...\n")
     
     try:
+        # Core RAGAS call — runs all four metrics across every sample.
+        # Each sample triggers multiple LLM calls (one per metric), so this can take a while.
         result = evaluate(
             dataset=dataset,
             metrics=[
@@ -262,6 +282,7 @@ def main():
         print("  - Check Azure credentials are correct")
         print("  - Check API quota not exceeded")
         print("  - Check internet connection")
+        # Print full stack trace so the actual root cause is visible
         import traceback
         traceback.print_exc()
         sys.exit(1)
@@ -275,16 +296,17 @@ def main():
     print("\nOVERALL SCORES:\n")
     print(result)
     
-    # Convert to DataFrame
+    # Turn the RAGAS result into a pandas DataFrame so we can sort, filter, and save it
     df = result.to_pandas()
+    # Re-attach param_name from the original prepared items (RAGAS drops it)
     df["param_name"] = [item["param_name"] for item in prepared]
     
-    # Reorder columns
+    # Drop unused columns and put param_name first for readability
     cols = ["param_name", "answer_correctness", "context_recall", 
             "context_precision", "faithfulness"]
     df = df[[c for c in cols if c in df.columns]]
     
-    # Display per-parameter
+    # Print one row per test case in a fixed-width table
     print(f"\n\nPER-PARAMETER BREAKDOWN:")
     print("-" * 80)
     print(f"{'Parameter':<30} {'AC':<12} {'Recall':<12} {'Precision':<12} {'Faith':<12}")
@@ -299,7 +321,7 @@ def main():
         
         print(f"{param:<30} {ac:<12} {recall:<12} {prec:<12} {faith:<12}")
     
-    # Check for low scores
+    # Flag any test cases that scored poorly so the operator can investigate
     low_scores = df[df["answer_correctness"] < 0.7]
     if len(low_scores) > 0:
         print(f"\n\nLOW SCORING (answer_correctness < 0.7):")
@@ -316,14 +338,15 @@ def main():
     print(f"\n\nSTEP 8: SAVING RESULTS")
     print("-" * 80 + "\n")
     
+    # Single timestamp shared by all three output files so they group together
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
-    # Save CSV
+    # Save CSV — easiest format for Excel / data analysis
     csv_file = f"ragas_evaluation_detailed_{timestamp}.csv"
     df.to_csv(csv_file, index=False)
     print(f"✓ CSV → {csv_file}")
     
-    # Save JSON
+    # Save JSON — machine-readable with run metadata + aggregate stats + per-row scores
     json_file = f"ragas_results_{timestamp}.json"
     results_dict = {
         "timestamp": timestamp,
@@ -332,6 +355,7 @@ def main():
         "embedding_model": EMBEDDING_MODEL,
         "items_evaluated": len(prepared),
         "items_skipped": len(skipped),
+        # Per-metric summary: mean / min / max across all evaluated items
         "metrics_summary": {
             "answer_correctness": {
                 "mean": float(df["answer_correctness"].mean()),
@@ -354,6 +378,7 @@ def main():
                 "max": float(df["faithfulness"].max())
             }
         },
+        # Per-parameter scores, one entry per test case
         "per_parameter": [
             {
                 "parameter": row["param_name"],
@@ -366,13 +391,15 @@ def main():
         ]
     }
     
+    # Write the JSON report to disk (indented for readability)
     with open(json_file, "w", encoding="utf-8") as f:
         json.dump(results_dict, f, indent=2)
     print(f"✓ JSON → {json_file}")
     
-    # Save summary
+    # Save a human-readable text summary suitable for pasting into reports or chat
     summary_file = f"ragas_summary_{timestamp}.txt"
     with open(summary_file, "w", encoding="utf-8") as f:
+        # Header block: run metadata
         f.write("RAGAS EVALUATION SUMMARY\n")
         f.write("=" * 80 + "\n\n")
         f.write(f"Input File: {INPUT_FILE}\n")
@@ -382,6 +409,7 @@ def main():
         f.write(f"Items Skipped: {len(skipped)}\n")
         f.write(f"Timestamp: {timestamp}\n\n")
         
+        # Aggregate metric stats (same as JSON, but formatted for humans)
         f.write("OVERALL METRICS:\n")
         f.write("-" * 80 + "\n")
         f.write(f"answer_correctness:  {df['answer_correctness'].mean():.4f} (min: {df['answer_correctness'].min():.4f}, max: {df['answer_correctness'].max():.4f})\n")
@@ -389,6 +417,7 @@ def main():
         f.write(f"context_precision:   {df['context_precision'].mean():.4f} (min: {df['context_precision'].min():.4f}, max: {df['context_precision'].max():.4f})\n")
         f.write(f"faithfulness:        {df['faithfulness'].mean():.4f} (min: {df['faithfulness'].min():.4f}, max: {df['faithfulness'].max():.4f})\n\n")
         
+        # Per-parameter answer_correctness as a quick scan list
         f.write("PER-PARAMETER:\n")
         f.write("-" * 80 + "\n")
         for idx, row in df.iterrows():
@@ -410,5 +439,7 @@ def main():
     print(f"\nOpen CSV in Excel for detailed analysis\n")
 
 
+# Entry point — only runs main() when the script is executed directly,
+# not when imported as a module.
 if __name__ == "__main__":
     main()
