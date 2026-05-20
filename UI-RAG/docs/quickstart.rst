@@ -49,21 +49,6 @@ You should see:
     ✓ Uvicorn running on http://127.0.0.1:8000
     ✓ Application startup complete
 
-**4. Test the API**
-
-Open ``http://127.0.0.1:8000/docs`` in your browser - you'll see the interactive API documentation.
-
-**5. Start the frontend**
-
-In a new terminal:
-
-.. code-block:: bash
-
-    cd frontend
-    npm install  # First time only
-    npm start
-
-The React app opens at ``http://localhost:3000``
 
 Your First Upload
 =================
@@ -79,7 +64,7 @@ Your First Upload
 3. **Upload document and create the project**
 
    - Click "Upload Project"
-   - Select project type: "standalone" or "combined"
+   - Select project type
    - Choose your PDF file
    - Click "Upload"
 
@@ -118,10 +103,9 @@ Using the Web Interface
 
 .. code-block:: text
 
-    1. Select Project Type
-       - Standalone: Single configuration (currently working)
-       - Combined: Both onshore and offshore
-
+    1. Create New Project and Select Project Type
+       - Standalone: Single configuration 
+   
     2. Choose Files
        - Supports PDF
        - Max 100MB per file
@@ -173,7 +157,6 @@ Performance Tips
 **For Better Results:**
 
 1. **Use clean PDFs**
-   - Avoid scanned images (must be OCR'd first)
    - Ensure text is extractable
    - Check page numbers are correct
 
