@@ -305,13 +305,6 @@ upgrade pip and setuptools first:
     python -m pip install --upgrade pip setuptools wheel
     pip install ragas datasets langchain-openai pandas
 
-**Problem: RAGAS evaluation hangs or rate-limits**
-
-Solution: RAGAS makes multiple judge LLM calls per test case (one per metric).
-On Azure OpenAI free or low-tier deployments, you can hit quota limits quickly.
-Either upgrade your Azure quota, reduce the number of test cases, or switch
-``CHAT_MODEL`` in ``evaluate_with_ragas.py`` to a cheaper/faster model like
-``gpt-4o-mini``.
 
 Next Steps
 ==========
