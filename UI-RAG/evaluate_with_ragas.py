@@ -45,10 +45,10 @@ def convert_to_string(value, separator="\n"):
     return str(value).strip()
 
 
-"""
-Checks one test-case dict for required fields (question, contexts, answer, ground_truth)
-and returns a normalized copy. Returns (is_valid, cleaned_item, error_message).
-"""
+
+# Checks one test-case dict for required fields (question, contexts, answer, ground_truth)
+# and returns a normalized copy. Returns (is_valid, cleaned_item, error_message).
+
 
 def validate_item(item):
     """Validate and convert item"""
@@ -84,11 +84,11 @@ def validate_item(item):
 
 
 
- """
- Orchestrates the full 8-step evaluation pipeline:
- validate creds -> load JSON -> validate items -> build Dataset ->
- init Azure judge & embeddings -> run RAGAS -> display -> save reports.
- """
+
+# Orchestrates the full 8-step evaluation pipeline:
+# validate creds -> load JSON -> validate items -> build Dataset ->
+# init Azure judge & embeddings -> run RAGAS -> display -> save reports.
+
 def main():
     """Main evaluation function"""
     
