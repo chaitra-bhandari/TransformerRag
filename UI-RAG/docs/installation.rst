@@ -144,11 +144,6 @@ Create a ``.env`` file in the project root with your Azure and API credentials:
     AZURE_DI_ENDPOINT=https://your-region.api.cognitive.microsoft.com/
     AZURE_DI_API_KEY=your_di_api_key
 
-    # Azure AI Search
-    AZURE_SEARCH_ENDPOINT=https://your-search-service.search.windows.net/
-    AZURE_SEARCH_KEY=your_search_key
-    AZURE_SEARCH_INDEX=transformer-chunks
-
     # Blob Container Names
     BLOB_INPUT_CONTAINER=transformer-input
     BLOB_OUTPUT_CONTAINER=output-of-di
