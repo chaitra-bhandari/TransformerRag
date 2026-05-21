@@ -1,9 +1,17 @@
 Transformer Spec RAG Documentation
 ==================================
 
-Welcome to **Transformer Spec RAG** — an AI-powered document extraction and specification generation system using Retrieval-Augmented Generation (RAG).
+Welcome to Transformer Spec RAG — an AI-powered document extraction and specification generation system built on Retrieval-Augmented Generation (RAG).
+The system automates one of the more time-consuming steps in power transformer manufacturing: extracting technical parameters from heterogeneous customer specification documents and populating them into standardised order design documents. Instead of engineers spending two working days per project manually locating values across PDFs, DOCX files, and Excel sheets, the assistant ingests the documents, retrieves the relevant passages, and generates filled order documents with every value linked back to its source.
+This documentation covers everything you need to understand, run, and extend the system:
 
-This documentation provides complete information about the system architecture, module guides, API reference, and usage instructions.
+System architecture — the end-to-end pipeline from document upload to order document generation
+Module guides — detailed walk-throughs of each component (document parsing, chunking, hybrid retrieval, reranking, LLM extraction, and template population)
+API reference — endpoint specifications for integration and programmatic use
+Usage instructions — step-by-step guides for setting up the environment, running the pipeline, and interpreting the output
+
+Whether you are running the system on a new project, integrating it into an existing workflow, or extending it to a different document domain, the sections that follow should give you everything you need.
+
 
 .. toctree::
    :maxdepth: 2
