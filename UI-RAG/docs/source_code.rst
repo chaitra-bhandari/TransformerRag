@@ -23,39 +23,48 @@ Project Structure
 Core Modules
 ============
 
+
+```rst
 Core Modules
 ============
 
+**app.py** — FastAPI Backend
+   Exposes three REST API endpoints for project creation, pipeline status polling, and order document download. Handles PDF uploads, request routing, and CORS configuration.
 
+|
 
-1. **app.py** — FastAPI Backend
-   - Exposes three REST API endpoints: project creation, pipeline status polling, and order document download
-   - Handles PDF file uploads, request routing, and CORS configuration for the React frontend
+**rag_query.py** — RAG Query Engine *(Most Important)*
+   Hybrid retrieval combining FAISS dense vector search (60%) and BM25 keyword search (40%). Reranks candidates using BAAI/bge-reranker-large and extracts parameters via GPT-4o as structured JSON. Supports English and German documents with a deep dive fallback for null values.
 
-2. **rag_query.py** — RAG Query Engine *(Most Important)*
-   - Hybrid retrieval combining FAISS dense vector search (60%) and BM25 keyword search (40%)
-   - Reranks candidates using BAAI/bge-reranker-large and extracts parameters via GPT-4o as structured JSON
-   - Supports English and German documents with a deep dive fallback for null values
+|
 
-3. **doc_extraction_using_di.py** — Document Processing
-   - Processes uploaded PDFs through Azure Document Intelligence (prebuilt-layout model)
-   - Extracts text, tables, and layout information with duplicate file detection via MD5 hash
+**doc_extraction_using_di.py** — Document Processing
+   Processes uploaded PDFs through Azure Document Intelligence (prebuilt-layout model). Extracts text, tables, and layout information with duplicate detection via MD5 hash.
 
-4. **chunk_by_title_semantic_blob.py** — Semantic Chunking
-   - Segments content under hierarchical headings into 2000–4000 character chunks
-   - Preserves tables as atomic units, removes noise, and tags each chunk with project metadata
+|
 
-5. **doc_filling_blob.py** — Document Generation
-   - Maps extracted JSON parameters into project-specific DOCX templates
-   - Appends source attribution table linking every value to its source document and page number
+**chunk_by_title_semantic_blob.py** — Semantic Chunking
+   Segments content under hierarchical headings into 2000–4000 character chunks. Preserves tables as atomic units, removes noise, and tags each chunk with project metadata.
 
-6. **Docflow_chatui.jsx** — React Frontend
-   - Single-page application for project creation, document upload, and pipeline status monitoring
-   - Polls backend every 10 seconds and provides one-click download of the generated DOCX
+|
 
-7. **evaluate_with_ragas.py** — RAGAS Evaluation
-   - Evaluates four metrics: Answer Correctness, Context Precision, Context Recall, and Faithfulness
-   - Uses GPT-4o-mini as judge and exports results in CSV, JSON, and text formats
+**doc_filling_blob.py** — Document Generation
+   Maps extracted JSON parameters into project-specific DOCX templates. Appends a source attribution table linking every value to its source document and page number.
+
+|
+
+**Docflow_chatui.jsx** — React Frontend
+   Single-page application for project creation, document upload, and pipeline status monitoring. Polls backend every 10 seconds and provides one-click download of the generated DOCX.
+
+|
+
+**evaluate_with_ragas.py** — RAGAS Evaluation
+   Evaluates Answer Correctness, Context Precision, Context Recall, and Faithfulness using GPT-4o-mini as judge. Exports results in CSV, JSON, and text formats.
+```
+
+---
+
+The `|` between each block adds a visible space line in ReadTheDocs.
 
 
 Key Source Files
