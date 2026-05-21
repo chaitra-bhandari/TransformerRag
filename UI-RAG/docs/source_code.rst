@@ -175,7 +175,7 @@ app.py (FastAPI Backend)
     async def health_check():
         """Health check endpoint"""
 
-See: :doc:`ui-rag/app module for complete source code and documentation
+See: :doc:`ui-rag/app` module for complete source code and documentation
 
 doc_extraction_using_di.py
 --------------------------
