@@ -298,7 +298,7 @@ chunk_by_title_semantic_blob.py
 See: ui-rag/chunk_by_title_semantic_blob` module for complete documentation
 
 
-    doc_filling_blob.py
+doc_filling_blob.py
 -------------------
 
 **Document Template Filling**
