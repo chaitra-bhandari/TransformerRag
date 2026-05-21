@@ -205,12 +205,49 @@ doc_extraction_using_di.py
 
 .. code-block:: json
 
+   {
+  "metadata": {
+    "project_name": "Energinet_VSR",
+    "source_document": "Technical_Specifications.pdf",
+    "timestamp": "2026-01-15T10:30:00Z",
+    "status": "success",
+    "total_pages": 45
+  },
+  "pages": [
     {
-      "pages": [...],
-      "paragraphs": [...],
-      "tables": [...],
-      "spans": [...]
+      "page_number": 1,
+      "content": "Technical Specification for 400kV Power Transformer..."
     }
+  ],
+  "tables": [
+    {
+      "page_number": 3,
+      "table_index": 0,
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "content": "Rated Power"
+        },
+        {
+          "row": 0,
+          "column": 1,
+          "content": "250 MVA"
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "content": "Rated Voltage HV"
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "content": "400 kV"
+        }
+      ]
+    }
+  ]
+}
 
 See: :doc:`modules/doc_extraction_using_di` module for complete documentation
 
