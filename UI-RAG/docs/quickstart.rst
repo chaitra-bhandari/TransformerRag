@@ -2,12 +2,12 @@
 Quick Start
 ===========
 
-Get Transformer Spec RAG running in 15 minutes.
-
+> Get Transformer Spec RAG up and running quickly.
 Prerequisites
 =============
 
 You need:
+
 - ✅ Python 3.8+
 - ✅ Azure account with services configured (see :doc:`configuration`)
 - ✅ Project cloned and dependencies installed (see :doc:`installation`)
