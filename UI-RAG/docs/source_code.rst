@@ -122,7 +122,7 @@ Main components:
     from sentence_transformers import CrossEncoder  # Reranking
     import numpy as np              # Numerical computing
 
-See: ui-rag/rag_query for complete source code and documentation
+See: :doc:`rag_query` for complete source code and documentation
 
 app.py (FastAPI Backend)
 ------------------------
@@ -175,7 +175,7 @@ app.py (FastAPI Backend)
     async def health_check():
         """Health check endpoint"""
 
-See: ui-rag/app module for complete source code and documentation
+See: :doc:`app` for complete source code and documentation
 
 doc_extraction_using_di.py
 --------------------------
@@ -249,7 +249,7 @@ doc_extraction_using_di.py
   ]
 }
 
-See: ui-rag/doc_extraction_using_di module for complete documentation
+See:  :doc:`doc_extraction_using_di` for complete documentation
 
 
 chunk_by_title_semantic_blob.py
@@ -295,7 +295,7 @@ chunk_by_title_semantic_blob.py
         }
     }
 
-See: ui-rag/chunk_by_title_semantic_blob` module for complete documentation
+See: :doc:`chunk_by_title_semantic_blob` module for complete documentation
 
 
 doc_filling_blob.py
@@ -325,6 +325,8 @@ doc_filling_blob.py
         
         def upload_to_blob(self, local_path: str, blob_path: str):
             """Upload generated document"""
+
+See: :doc:`doc_filling_blob` for complete documentation
 
 **Template Variables:**
 
