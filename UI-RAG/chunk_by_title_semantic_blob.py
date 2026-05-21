@@ -2,7 +2,7 @@
 By-Title Semantic Chunker for Azure
 
 Features:
-  Removes document noise (headers, footers, page numbers, doc numbers)
+  Removes document noise (headers, footers, doc numbers)
   Keeps all meaningful data intact
   Correct page numbers
   Clean metadata: source_document, project_name, page
