@@ -175,7 +175,7 @@ app.py (FastAPI Backend)
     async def health_check():
         """Health check endpoint"""
 
-See: :doc:`api/endpoints` for complete API reference
+
 
 doc_extraction_using_di.py
 --------------------------
