@@ -255,7 +255,7 @@ See:  :doc:`doc_extraction_using_di` for complete documentation
 chunk_by_title_semantic_blob.py
 -------------------------------
 
-** Chunking Method Implementation**
+**Chunking Method Implementation**
 
 .. code-block:: python
 
