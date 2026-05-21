@@ -23,8 +23,6 @@ Project Structure
 Core Modules
 ============
 
-Core Modules
-============
 
 1. **app.py** — FastAPI Backend
 
