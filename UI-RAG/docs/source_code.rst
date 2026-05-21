@@ -797,7 +797,7 @@ Performance Considerations
 Next Steps
 ==========
 
-- :doc:`ui rag/rag_query` - Complete RAG module documentation
+- :doc:rag_query`` - Complete RAG module documentation
 - :doc:`evaluate_with_ragas` - RAGAS evaluation documentation
 - :doc:`architecture` - System overview
 - :doc:`quickstart` - Get started
