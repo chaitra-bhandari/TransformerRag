@@ -2,7 +2,7 @@
 Quick Start
 ===========
 
- Get Transformer Spec RAG up and running quickly.
+Get Transformer Spec RAG up and running quickly.
 
 
 Prerequisites
