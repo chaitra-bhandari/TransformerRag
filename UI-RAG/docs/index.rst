@@ -71,9 +71,10 @@ Key Features
 Quick Links
 ~~~~~~~~~~~
 
-- **Getting Started**: :doc:`getting-started`
+
 - **Installation Guide**: :doc:`installation`
 - **Source Code**: :doc:`source_code`
+- **All Modules**: :doc:`modules`
 - **Evaluation**: :doc:`evaluate_with_ragas`
 - **Troubleshooting**: :doc:`troubleshooting`
 
