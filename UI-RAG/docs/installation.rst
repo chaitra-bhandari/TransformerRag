@@ -322,8 +322,8 @@ Getting Help
 
 If you encounter issues:
 
-1. Check :doc:`troubleshooting`
-2. Contact the development team
+  Check :doc:`troubleshooting`
+
 
 .. note::
 
