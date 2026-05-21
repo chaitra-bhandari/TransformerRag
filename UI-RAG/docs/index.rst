@@ -42,9 +42,9 @@ Documentation Overview
 .. toctree::
    :maxdepth: 2
    :caption: Source Code
-
-   modules
+   
    source_code
+   modules
 
 .. toctree::
    :maxdepth: 2
