@@ -255,7 +255,7 @@ See: ui-rag/doc_extraction_using_di module for complete documentation
 chunk_by_title_semantic_blob.py
 -------------------------------
 
-**Semantic Chunking Implementation**
+** Chunking Method Implementation**
 
 .. code-block:: python
 
