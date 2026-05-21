@@ -23,20 +23,20 @@ Project Structure
 Core Modules
 ============
 
-1. **rag_query.py** - RAG Query Engine (MOST IMPORTANT)
+1. **app.py** - FastAPI Backend
+   - HTTP endpoints
+   - File upload handling
+   - Query routing
+   - Document generation
+   - CORS configuration
+
+2. **rag_query.py** - RAG Query Engine (MOST IMPORTANT)
    - FAISS vector search
    - BM25 keyword search
    - CrossEncoder reranking
    - OpenAI GPT-4 generation
    - Language detection
    - Batch processing
-
-2. **app.py** - FastAPI Backend
-   - HTTP endpoints
-   - File upload handling
-   - Query routing
-   - Document generation
-   - CORS configuration
 
 3. **doc_extraction_using_di.py** - Document Processing
    - Azure Document Intelligence integration
