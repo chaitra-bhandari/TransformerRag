@@ -645,5 +645,5 @@ Frontend Architecture
 Next Steps
 ==========
 
-- Read doc:`source_code` and :doc:`modules` for detailed documentation
+- Read :doc:`source_code` and :doc:`modules` for detailed documentation
 - See :doc:`evaluate_with_ragas` for RAGAS evaluation setup
