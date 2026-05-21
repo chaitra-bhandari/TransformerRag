@@ -23,51 +23,52 @@ Project Structure
 Core Modules
 ============
 
-1. **app.py** - FastAPI Backend
-   - HTTP endpoints
-   - File upload handling
-   - Query routing
-   - Document generation
-   - CORS configuration
+Core Modules
+============
 
-2. **rag_query.py** - RAG Query Engine (MOST IMPORTANT)
-   - FAISS vector search
-   - BM25 keyword search
-   - CrossEncoder reranking
-   - OpenAI GPT-4 generation
-   - Language detection
-   - Batch processing
+1. **app.py** — FastAPI Backend
+   - Exposes three REST API endpoints: project creation, pipeline status polling, and order document download
+   - Handles multipart PDF file uploads and stores them in Azure Blob Storage
+   - Routes requests to the document processing and RAG query pipeline
+   - Configured with CORS to support the React frontend
 
-3. **doc_extraction_using_di.py** - Document Processing
-   - Azure Document Intelligence integration
-   - File download/upload
-   - DI result processing
-   - Duplicate detection
+2. **rag_query.py** — RAG Query Engine *(Most Important)*
+   - Builds a language-specific parameter registry of 27+ structured questions with English and German aliases
+   - Performs hybrid retrieval combining FAISS dense vector search (60%) and BM25 keyword search (40%)
+   - Reranks retrieved candidates using BAAI/bge-reranker-large cross-encoder
+   - Passes top-ranked chunks to GPT-4o for structured JSON parameter extraction
+   - Detects document language (English/German) to select the correct parameter registry
+   - Processes parameters in batches of 6 with a deep dive fallback for null values
 
-4. **chunk_by_title_semantic_blob.py** - Semantic Chunking
-   - Section-aware chunking
-   - Noise removal
-   - Token counting
-   - Hierarchical context
+3. **doc_extraction_using_di.py** — Document Processing
+   - Downloads uploaded PDFs from Azure Blob Storage and processes them through Azure Document Intelligence
+   - Uses the prebuilt-layout model to extract text, tables, and layout information
+   - Detects and skips duplicate files using MD5 hash comparison
+   - Saves extracted results as JSON and uploads them back to Azure Blob Storage
 
-5. **doc_filling_blob.py** - Document Generation
-   - DOCX template filling
-   - Parameter extraction
-   - Document formatting
-   - Upload to blob storage
+4. **chunk_by_title_semantic_blob.py** — Semantic Chunking
+   - Segments extracted content under hierarchical headings using a By-Title strategy
+   - Produces chunks of 2000–4000 characters with tables preserved as whole atomic units
+   - Removes document noise (headers, footers, page numbers) using 15+ regex patterns
+   - Tags every chunk with metadata: project name, source document, and page number
 
-6. **Docflow_chatui.jsx** - React Frontend
-   - Chat interface
-   - File upload UI
-   - Query processing
-   - Results display
+5. **doc_filling_blob.py** — Document Generation
+   - Maps extracted JSON parameter values to placeholder fields in project-specific DOCX templates
+   - Iterates through all paragraphs and tables to locate and replace each placeholder
+   - Appends a source attribution table linking every value to its source document and page number
+   - Saves the populated document to Azure Blob Storage ready for engineer download
 
-7. **evaluate_with_ragas.py** - RAGAS Evaluation
-   - Azure OpenAI judge LLM
-   - Azure OpenAI embeddings
-   - Four quality metrics (faithfulness, answer correctness, context recall & precision)
-   - Per-parameter scoring
-   - CSV / JSON / text report output
+6. **Docflow_chatui.jsx** — React Frontend
+   - Single-page application for project creation, document upload, and pipeline monitoring
+   - Submits project name and PDF files via multipart POST to the FastAPI backend
+   - Polls pipeline status every 10 seconds and displays real-time progress to the engineer
+   - Provides one-click download of the generated order design document
+
+7. **evaluate_with_ragas.py** — RAGAS Evaluation
+   - Evaluates system performance using GPT-4o-mini as judge and text-embedding-3-large for embeddings
+   - Assesses four metrics per query: Answer Correctness, Context Precision, Context Recall, and Faithfulness
+   - Processes question-context-answer-ground truth tuples across all evaluated projects
+   - Exports per-parameter results and summary reports in CSV, JSON, and text formats
 
 Key Source Files
 ================
