@@ -645,7 +645,5 @@ Frontend Architecture
 Next Steps
 ==========
 
-- Read :doc:`pipeline_flow` for detailed workflow
-- Explore :doc:`modules/index` for module details
-- Check :doc:`api/endpoints` for API reference
+- Read doc:`source_code` and :doc:`modules` for detailed documentation
 - See :doc:`evaluate_with_ragas` for RAGAS evaluation setup
