@@ -313,16 +313,14 @@ After installation:
 
 
 1. Follow the :doc:`quickstart` guide
-2. Explore the :doc:`source_code` and :doc:`ui_rag` documentation
+2. Explore the :doc:`source_code` and :doc:`ui rag` documentation
 3. Review :doc:`architecture` for system design
 4. Measure RAG quality with :doc:`evaluate_with_ragas`
 
 Getting Help
 ============
 
-If you encounter issues:
-
-  Check :doc:`troubleshooting`
+If you encounter issues, check :doc:`troubleshooting`
 
 
 .. note::
