@@ -72,7 +72,8 @@ Quick Links
 ~~~~~~~~~~~
 
 
-- **Installation Guide**: :doc:`installation`
+- **Getting Stared**: :doc:`installation`
+- **Quick Start**: :doc:`quickstart`
 - **Source Code**: :doc:`source_code`
 - **All Modules**: :doc:`modules`
 - **Evaluation**: :doc:`evaluate_with_ragas`
