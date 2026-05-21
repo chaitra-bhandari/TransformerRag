@@ -17,11 +17,11 @@ and page number.
 Documentation Overview
 ----------------------
 
-- **System Architecture** — End-to-end pipeline from document upload to order document generation
-- **Module Guides** — Document parsing, chunking, hybrid retrieval, reranking, LLM extraction, and template population
-- **API Reference** — Endpoint specifications for integration and programmatic use
-- **Usage Instructions** — Environment setup, pipeline execution, and output interpretation
-
+- **Getting Started** — Installation, environment setup, and quickstart guide to run the pipeline
+- **Architecture & Design** — End-to-end system architecture, pipeline stages, and component overview
+- **Source Code** — Full module documentation and auto-generated API reference
+- **Configuration** — Azure setup, environment variables, and system configuration options
+- **Troubleshooting & Support** — Common issues, FAQ, and contact information
 
 .. toctree::
    :maxdepth: 2
