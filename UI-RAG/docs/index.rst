@@ -54,14 +54,14 @@ Whether you are running the system on a new project, integrating it into an exis
 Overview
 --------
 
-The system processes transformer specification documents through a multi-stage pipeline:
+The system processes power transformer customer specification documents through a multi-stage pipeline:
 
-1. **Document Extraction** — Azure Document Intelligence extracts content from PDFs, DOCX, and XLSX files
-2. **Semantic Chunking** — Intelligent chunking by title with noise removal and proper metadata
-3. **Vector Indexing** — FAISS vector search combined with BM25 hybrid retrieval
-4. **RAG Query** — Uses Azure OpenAI to extract specific transformer parameters
-5. **Document Generation** — Fills Word templates with extracted data
-6. **Evaluation** — RAGAS-based quality assessment using Azure OpenAI as judge and embeddings
+1. **Document Extraction** — Azure Document Intelligence extracts text, tables, and layout from uploaded PDF files
+2. **Semantic Chunking** — By-Title chunking strategy with 2000–4000 character chunks, noise removal, and project-level metadata tagging
+3. **Vector Indexing** — text-embedding-3-large embeddings indexed in FAISS, combined with BM25 for hybrid retrieval across English and German documents
+4. **RAG Query** — Parameter registry of 27+ structured questions with domain aliases, reranked by BAAI/bge-reranker-large, extracted via GPT-4o as structured JSON
+5. **Document Generation** — Extracted parameters populate standardised DOCX templates with full source and page attribution per parameter
+6. **Evaluation** — RAGAS framework with GPT-4o-mini as judge assesses Answer Correctness, Context Precision, Context Recall, and Faithfulness
 
 Key Features
 ~~~~~~~~~~~~
