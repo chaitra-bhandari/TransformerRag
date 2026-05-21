@@ -23,7 +23,7 @@ This documentation provides complete information about the system architecture, 
 
 .. toctree::
    :maxdepth: 2
-   :caption: API Reference
+   :caption: Source Code
 
    modules
    source_code
@@ -73,8 +73,7 @@ Quick Links
 
 - **Getting Started**: :doc:`getting-started`
 - **Installation Guide**: :doc:`installation`
-- **API Reference**: :doc:`api/app`
-- **Configuration**: :doc:`configuration`
+- **Source Code**: :doc:`source_code`
 - **Evaluation**: :doc:`evaluate_with_ragas`
 - **Troubleshooting**: :doc:`troubleshooting`
 
