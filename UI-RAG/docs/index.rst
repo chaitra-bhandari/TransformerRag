@@ -63,7 +63,7 @@ The system processes power transformer customer specification documents through 
 1. **Document Extraction** — Azure Document Intelligence extracts text, tables, and layout from uploaded PDF files
 2. **Semantic Chunking** — By-Title chunking strategy with 2000–4000 character chunks, noise removal, and project-level metadata tagging
 3. **Vector Indexing** — text-embedding-3-large embeddings indexed in FAISS, combined with BM25 for hybrid retrieval across English and German documents
-4. **RAG Query** — Parameter registry of 27+ structured questions with domain aliases, reranked by BAAI/bge-reranker-large, extracted via GPT-4o as structured JSON
+4. **RAG Query** — Parameter registry, reranked by BAAI/bge-reranker-large, extracted via GPT-4o as structured JSON
 5. **Document Generation** — Extracted parameters populate standardised DOCX templates with full source and page attribution per parameter
 6. **Evaluation** — RAGAS framework with GPT-4o-mini as judge assesses Answer Correctness, Context Precision, Context Recall, and Faithfulness
 
@@ -74,9 +74,8 @@ Key Features
 - ✅ Hybrid search (vector + keyword retrieval)
 - ✅ Deep-dive search for null values
 - ✅ Duplicate file detection
-- ✅ Image page detection
 - ✅ Azure Blob Storage integration
-- ✅ FastAPI backend with CORS support
+- ✅ FastAPI backend
 - ✅ Real-time processing status updates
 - ✅ RAGAS evaluation with 4 quality metrics (faithfulness, answer correctness, context recall & precision)
 
