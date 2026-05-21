@@ -97,7 +97,6 @@ Intelligently splits documents while preserving structure:
          ↓
     Noise Removal:
     - Strip headers/footers
-    - Remove page numbers
     - Filter document metadata
          ↓
     Structure Analysis:
