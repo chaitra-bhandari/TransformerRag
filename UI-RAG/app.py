@@ -5,12 +5,12 @@ Pipeline flow (triggered on every new project upload):
   1. DI extraction        → output-of-di/{project}/
   2. Chunking             → chunked-output/all_chunks.json
   3. Azure AI Search indexing → vector search index
-  4. RAG extraction       → JSON from rag_query.py (parameters hardcoded)
+  4. RAG extraction       → JSON from rag_query.py 
   5. Order doc generation → order-design-documents/{project}/Order_A.docx
                             order-design-documents/{project}/Order_B.docx
 
 Containers (configured in .env):
-  - transformer-input          : uploaded raw PDFs/docx
+  - transformer-input          : uploaded raw PDFs
   - output-of-di               : DI JSON results
   - chunked-output             : all_chunks.json
   - order-templates            : Order_A.docx, Order_B.docx templates
