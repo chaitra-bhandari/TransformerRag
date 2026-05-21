@@ -311,11 +311,11 @@ Next Steps
 
 After installation:
 
-1. Complete :doc:`configuration` setup
-2. Follow the :doc:`quickstart` guide
-3. Explore the :doc:`api/index` documentation
-4. Review :doc:`architecture` for system design
-5. Measure RAG quality with :doc:`evaluate_with_ragas`
+
+1. Follow the :doc:`quickstart` guide
+2. Explore the :doc:`source code` and :doc:`ui rag` documentation
+3. Review :doc:`architecture` for system design
+4. Measure RAG quality with :doc:`evaluate_with_ragas`
 
 Getting Help
 ============
