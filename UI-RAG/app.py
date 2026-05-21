@@ -147,7 +147,7 @@ def trigger_chunking(project_name: str, blob_folder: str):
 def trigger_order_generation(project_name: str):
     """
     Flow:
-      1. query_rag()  → uses Azure AI Search + LLM
+      1. query_rag()  → uses FAISS search + LLM
                         → extracts all parameters from rag_query.py
                         → returns combined JSON string
       2. DocxFiller() → downloads template from order-templates/
