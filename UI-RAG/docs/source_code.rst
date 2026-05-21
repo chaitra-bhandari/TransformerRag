@@ -799,7 +799,6 @@ Next Steps
 
 - :doc:`modules/rag_query` - Complete RAG module documentation
 - :doc:`evaluate_with_ragas` - RAGAS evaluation documentation
-- :doc:`api/endpoints` - API implementation
 - :doc:`architecture` - System overview
 - :doc:`quickstart` - Get started
 
