@@ -119,9 +119,5 @@ To get started quickly:
 Support & Contact
 ~~~~~~~~~~~~~~~~~
 
-For issues, questions, or contributions, please visit the project repository.
+For issues, questions, contact chaitrabhandati@gmail.com
 
-.. note::
-
-   This documentation is automatically generated from the source code using Sphinx and hosted on ReadTheDocs.
-   For the latest version, visit the main repository.
